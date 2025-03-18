@@ -1,5 +1,7 @@
 # 加密貨幣數據中心
 
+**當前版本**：1.0.0
+
 這是一個專注於加密貨幣市場數據分析的網頁應用程式，提供多種市場指標的即時監控和分析功能。
 
 ## 功能特點
@@ -145,5 +147,6 @@ yarn start
 
 如有任何問題或建議，請通過以下方式聯絡我們：
 
-- 電子郵件：[your-email@example.com](mailto:your-email@example.com)
-- GitHub Issues：[https://github.com/your-username/funding-rate/issues](https://github.com/your-username/funding-rate/issues)
+* GitHub Issues：[https://github.com/yuhsien0411/ArbiMaster/issues](https://github.com/yuhsien0411/ArbiMaster/issues)
+
+
