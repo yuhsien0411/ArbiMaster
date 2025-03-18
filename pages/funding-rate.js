@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import axios from 'axios';
+import axiosRetry from 'axios-retry';
+
+// 配置 axios 重試
+axiosRetry(axios, {
+  retries: 3,
+  retryDelay: (retryCount) => {
+    return retryCount * 1000; // 重試延遲時間遞增
+  },
+  retryCondition: (error) => {
+    // 只在網絡錯誤、超時或特定 HTTP 狀態碼時重試
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+           error.code === 'ECONNABORTED' ||
+           (error.response && [408, 500, 502, 503, 504].includes(error.response.status));
+  },
+  shouldResetTimeout: true
+});
 
 export default function FundingRate() {
   // 狀態管理
