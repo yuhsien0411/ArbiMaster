@@ -13,6 +13,7 @@
     "@mui/icons-material": "^6.4.3",
     "@mui/material": "^6.4.3",
     "axios": "^1.7.9",
+    "axios-retry": "^4.5.0",
     "chart.js": "^4.4.7",
     "express": "^4.21.2",
     "next": "^14.1.0",
