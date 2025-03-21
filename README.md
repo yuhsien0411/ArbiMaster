@@ -149,4 +149,24 @@ yarn start
 
 * GitHub Issues：[https://github.com/yuhsien0411/ArbiMaster/issues](https://github.com/yuhsien0411/ArbiMaster/issues)
 
+安裝 socket.io-client 套件
+```bash
+npm install socke.io-client
+```
+克隆專案
+1.
+開新的空白專案
+Terminal打
+”git clone GitHub連結”
+
+2.
+克隆完成之後開始編輯
+不用另外用倉庫，因為科隆的時候就會連到倉庫了。
+
+3.
+存檔完
+Push 編輯的檔案
+下面有選項，可以選分支。
+統一用master，其他的我刪了
+
 
