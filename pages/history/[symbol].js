@@ -144,11 +144,12 @@ const exchangeColors = {
   Bybit: '#4183FC',    // 藍色
   Bitget: '#00b067',   // 綠色
   OKX: '#2FB8E7',      // OKX 品牌藍色
+  Gate: '#2354E6',     // Gate.io 品牌藍色
   HyperLiquid: '#FF0000'  // 紅色
 };
 
 // 定義交易所順序
-const exchangeOrder = ['Binance', 'Bybit', 'Bitget', 'OKX', 'HyperLiquid'];
+const exchangeOrder = ['Binance', 'Bybit', 'Bitget', 'OKX', 'Gate', 'HyperLiquid'];
 
 // 修改計算累計費率函數
 const calculateCumulativeRates = (data, timeRange) => {
@@ -348,6 +349,23 @@ export default function HistoryPage() {
           }
         }
 
+        // Gate.io
+        try {
+          // 改用後端API代理請求，避免CORS問題
+          const gateRes = await fetch(`/api/current-rate?symbol=${symbol}&exchange=gate`);
+          const gateData = await gateRes.json();
+          
+          if (gateData.success && gateData.rate !== undefined) {
+            currentData.rates.Gate = {
+              rate: gateData.rate,
+              nextFundingTime: gateData.nextFundingTime || null
+            };
+          }
+          console.log('Gate.io 當前費率:', currentData.rates.Gate);
+        } catch (error) {
+          console.error('Gate.io current rate error:', error);
+        }
+
         // HyperLiquid
         try {
           const hyperRes = await fetch('https://api.hyperliquid.xyz/info', {
@@ -358,39 +376,70 @@ export default function HistoryPage() {
             })
           });
           const hyperData = await hyperRes.json();
+          
+          console.log('HyperLiquid API 響應:', {
+            原始數據: hyperData,
+            幣種: symbol
+          });
+
           if (Array.isArray(hyperData) && hyperData.length === 2) {
             const [metadata, assetContexts] = hyperData;
             const assetIndex = metadata.universe.findIndex(asset => asset.name === symbol);
+            
+            console.log('HyperLiquid 資產信息:', {
+              資產索引: assetIndex,
+              資產上下文: assetContexts[assetIndex]
+            });
+
             if (assetIndex !== -1 && assetContexts[assetIndex]) {
-              // 獲取當前小時的資金費率
-              const currentHourRes = await fetch('https://api.hyperliquid.xyz/info', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  type: 'fundingHistory',
-                  coin: symbol,
-                  startTime: Math.floor(Date.now() - 3600000), // 一小時前
-                  endTime: Math.floor(Date.now())
-                })
-              });
+              const fundingRate = parseFloat(assetContexts[assetIndex].funding);
               
-              const currentHourData = await currentHourRes.json();
-              let totalRate = 0;
-              
-              if (Array.isArray(currentHourData)) {
-                // 計算當前小時內所有費率的總和
-                totalRate = currentHourData.reduce((sum, item) => {
-                  return sum + parseFloat(item.funding || 0);
-                }, 0);
+              if (!isNaN(fundingRate)) {
+                // 先設置當前小時資費率
+                currentData.rates.HyperLiquid = {
+                  rate: (fundingRate * 100).toFixed(4),
+                  hourlyRates: []
+                };
+
+                // 獲取最近 8 小時的資金費率歷史
+                try {
+                  const eightHoursAgo = Math.floor(Date.now() - 8 * 3600000);
+                  const currentHourRes = await fetch('https://api.hyperliquid.xyz/info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      type: 'fundingHistory',
+                      coin: symbol,
+                      startTime: eightHoursAgo,
+                      endTime: Math.floor(Date.now())
+                    })
+                  });
+                  
+                  const hourlyData = await currentHourRes.json();
+                  if (Array.isArray(hourlyData) && hourlyData.length > 0) {
+                    // 保存詳細的小時資費率，供懸浮窗顯示
+                    const detailedHourlyRates = hourlyData
+                      .filter(item => !isNaN(parseFloat(item.funding)))
+                      .map(item => ({
+                        time: new Date(item.time).toLocaleString(),
+                        rate: (parseFloat(item.funding) * 100).toFixed(4),
+                        isHourly: true
+                      }));
+                      
+                    currentData.rates.HyperLiquid.hourlyRates = detailedHourlyRates;
+                    
+                    // 計算 8 小時累計資費率
+                    if (detailedHourlyRates.length > 0) {
+                      const sum = detailedHourlyRates.reduce((acc, item) => acc + parseFloat(item.rate), 0);
+                      // 將 8 小時總和設為顯示的資費率
+                      currentData.rates.HyperLiquid.rate = sum.toFixed(4);
+                      currentData.rates.HyperLiquid.is8hSum = true;
+                    }
+                  }
+                } catch (error) {
+                  console.error('HyperLiquid history error:', error);
+                }
               }
-              
-              currentData.rates.HyperLiquid = {
-                rate: (totalRate * 100).toFixed(4),
-                hourlyRates: currentHourData.map(item => ({
-                  time: new Date(item.time).toLocaleString(),
-                  rate: (parseFloat(item.funding) * 100).toFixed(4)
-                }))
-              };
             }
           }
         } catch (error) {
@@ -462,11 +511,21 @@ export default function HistoryPage() {
 
   // 處理滑鼠懸停事件
   const handleMouseEnter = (event, rates) => {
-    if (!rates?.hourlyRates) return;
+    if (!rates?.hourlyRates || rates.hourlyRates.length === 0) return;
     
     const rect = event.currentTarget.getBoundingClientRect();
-    const content = rates.hourlyRates
-      .filter(hr => hr.isHourly)  // 只顯示小時數據
+    
+    // 準備顯示內容
+    let content = '';
+    
+    // 如果是 8 小時累計，添加說明
+    if (rates.is8hSum) {
+      content = `8小時累計: ${rates.rate}%\n\n小時詳細:\n`;
+    }
+    
+    // 添加每小時詳細資料
+    content += rates.hourlyRates
+      .filter(hr => hr.isHourly)
       .map(hr => `${hr.time}: ${hr.rate}%`)
       .join('\n');
 
@@ -500,11 +559,12 @@ export default function HistoryPage() {
               className="select-control"
             >
               <option value="all">所有交易所</option>
-              <option value="HyperLiquid">HyperLiquid</option>
               <option value="Binance">Binance</option>
               <option value="Bybit">Bybit</option>
               <option value="Bitget">Bitget</option>
               <option value="OKX">OKX</option>
+              <option value="Gate">Gate.io</option>
+              <option value="HyperLiquid">HyperLiquid</option>
             </select>
 
             <div className="time-range">
@@ -568,18 +628,24 @@ export default function HistoryPage() {
                     {exchangeOrder.map(exchange => {
                       const cumulativeRates = calculateCumulativeRates(historyData, timeRange);
                       const rate = cumulativeRates?.[exchange];
+                      const isHyperLiquid = exchange === 'HyperLiquid';
+                      const hasRate = isHyperLiquid ? !!rate : (rate !== undefined && rate !== null);
+                      const rateValue = hasRate ? parseFloat(rate) : null;
+                      
                       return (
                         <td 
                           key={exchange}
                           className={`${
-                            rate 
-                              ? parseFloat(rate) > 0 
+                            hasRate
+                              ? rateValue > 0 
                                 ? 'positive-rate' 
-                                : 'negative-rate'
+                                : (isHyperLiquid || rateValue < 0)
+                                  ? 'negative-rate'
+                                  : '' // 非 HyperLiquid 的零值無特殊樣式
                               : ''
                           }`}
                         >
-                          {rate ? `${rate}%` : '-'}
+                          {hasRate ? `${rate}%` : '-'}
                         </td>
                       );
                     })}
@@ -588,29 +654,38 @@ export default function HistoryPage() {
                   {currentRates && (
                     <tr>
                       <td>當前</td>
-                      {exchangeOrder.map(exchange => (
-                        <td 
-                          key={exchange}
-                          className={`${
-                            currentRates.rates[exchange]?.rate 
-                              ? parseFloat(currentRates.rates[exchange].rate) > 0 
-                                ? 'positive-rate' 
-                                : 'negative-rate'
-                              : ''
-                          }`}
-                          onMouseEnter={(e) => exchange === 'HyperLiquid' && 
-                            handleMouseEnter(e, currentRates.rates[exchange])}
-                          onMouseLeave={handleMouseLeave}
-                        >
-                          {currentRates.rates[exchange]?.rate 
-                            ? `${currentRates.rates[exchange].rate}%` 
-                            : '-'}
-                          {exchange === 'HyperLiquid' && 
-                           currentRates.rates[exchange]?.hourlyRates && (
-                            <span className="info-icon">ℹ</span>
-                          )}
-                        </td>
-                      ))}
+                      {exchangeOrder.map(exchange => {
+                        // 為 HyperLiquid 使用原始邏輯，為其他交易所使用新邏輯
+                        const isHyperLiquid = exchange === 'HyperLiquid';
+                        const rate = currentRates.rates[exchange]?.rate;
+                        const hasRate = isHyperLiquid ? !!rate : (rate !== undefined && rate !== null);
+                        const rateValue = hasRate ? parseFloat(rate) : null;
+                        
+                        return (
+                          <td 
+                            key={exchange}
+                            className={`${
+                              hasRate
+                                ? rateValue > 0 
+                                  ? 'positive-rate' 
+                                  : (isHyperLiquid || rateValue < 0)
+                                    ? 'negative-rate'
+                                    : '' // 非 HyperLiquid 的零值無特殊樣式
+                                : ''
+                            }`}
+                            onMouseEnter={(e) => isHyperLiquid && 
+                              handleMouseEnter(e, currentRates.rates[exchange])}
+                            onMouseLeave={handleMouseLeave}
+                          >
+                            {hasRate ? `${rate}%` : '-'}
+                            {isHyperLiquid && 
+                             currentRates.rates[exchange]?.hourlyRates && 
+                             currentRates.rates[exchange]?.hourlyRates.length > 0 && (
+                              <span className="info-icon">ℹ</span>
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                   )}
                   {/* 修改歷史數據行 */}
@@ -629,19 +704,34 @@ export default function HistoryPage() {
                   .map(([time, rates]) => (
                     <tr key={time}>
                       <td>{time}</td>
-                      {exchangeOrder.map(exchange => (
-                        <td 
-                          key={exchange}
-                          className={`${rates[exchange]?.rate && parseFloat(rates[exchange].rate) > 0 ? 'positive-rate' : 'negative-rate'}`}
-                          onMouseEnter={(e) => exchange === 'HyperLiquid' && rates[exchange]?.hourlyRates && handleMouseEnter(e, rates[exchange])}
-                          onMouseLeave={handleMouseLeave}
-                        >
-                          {rates[exchange]?.rate ? `${rates[exchange].rate}%` : '-'}
-                          {exchange === 'HyperLiquid' && rates[exchange]?.hourlyRates && (
-                            <span className="info-icon">ℹ</span>
-                          )}
-                        </td>
-                      ))}
+                      {exchangeOrder.map(exchange => {
+                        const isHyperLiquid = exchange === 'HyperLiquid';
+                        const rate = rates[exchange]?.rate;
+                        const hasRate = isHyperLiquid ? !!rate : (rate !== undefined && rate !== null);
+                        const rateValue = hasRate ? parseFloat(rate) : null;
+                        
+                        return (
+                          <td 
+                            key={exchange}
+                            className={`${
+                              hasRate
+                                ? rateValue > 0 
+                                  ? 'positive-rate' 
+                                  : (isHyperLiquid || rateValue < 0)
+                                    ? 'negative-rate'
+                                    : '' // 非 HyperLiquid 的零值無特殊樣式
+                                : ''
+                            }`}
+                            onMouseEnter={(e) => isHyperLiquid && rates[exchange]?.hourlyRates && rates[exchange]?.hourlyRates.length > 0 && handleMouseEnter(e, rates[exchange])}
+                            onMouseLeave={handleMouseLeave}
+                          >
+                            {hasRate ? `${rate}%` : '-'}
+                            {isHyperLiquid && rates[exchange]?.hourlyRates && rates[exchange]?.hourlyRates.length > 0 && (
+                              <span className="info-icon">ℹ</span>
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>

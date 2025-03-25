@@ -15,14 +15,15 @@ if (!global.io) {
 io = global.io;
 
 // 添加 fetch 超時和重試函數
-async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+async function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   
   try {
     const response = await fetch(url, {
       ...options,
-      signal: controller.signal
+      signal: controller.signal,
+      timeout: timeout // 添加顯式超時
     });
     clearTimeout(id);
     return response;
@@ -32,9 +33,10 @@ async function fetchWithTimeout(url, options = {}, timeout = 30000) {
   }
 }
 
-// 添加重試函數
+// 改進重試函數
 async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   let lastError;
+  const delays = [1000, 2000, 4000]; // 遞增延遲時間
   
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -42,11 +44,19 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return response;
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error(`JSON 解析錯誤 (${url}):`, e);
+        throw e;
+      }
     } catch (error) {
       lastError = error;
+      console.error(`嘗試 ${i + 1}/${maxRetries} 失敗:`, error.message);
+      
       if (i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        await new Promise(resolve => setTimeout(resolve, delays[i]));
         continue;
       }
     }
@@ -171,21 +181,24 @@ async function fetchAllExchangeData() {
           body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
           timeout: 15000
         }
+      },
+      { 
+        name: 'Gate.io Contracts', 
+        url: 'https://api.gateio.ws/api/v4/futures/usdt/contracts',
+        options: {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          timeout: 15000
+        }
       }
     ];
 
     const responses = await Promise.allSettled(
       apiCalls.map(async ({ name, url, options = {} }) => {
         try {
-          const response = await fetchWithRetry(url, options);
-          const text = await response.text();
-          try {
-            return JSON.parse(text);
-          } catch (e) {
-            console.error(`JSON 解析錯誤 (${name}):`, e);
-            console.error('收到的響應:', text.substring(0, 200) + '...');
-            return null;
-          }
+          return await fetchWithRetry(url, options);
         } catch (error) {
           console.error(`${name} API 調用失敗:`, error);
           return null;
@@ -203,7 +216,8 @@ async function fetchAllExchangeData() {
       bitgetContractsResult,
       okxTickersResult,
       okxInstrumentsResult,
-      hyperliquidResult
+      hyperliquidResult,
+      gateioContractsResult
     ] = responses;
 
     // 提取成功的響應數據
@@ -216,6 +230,7 @@ async function fetchAllExchangeData() {
     const okxTickersData = okxTickersResult.status === 'fulfilled' ? okxTickersResult.value : null;
     const okxInstrumentsData = okxInstrumentsResult.status === 'fulfilled' ? okxInstrumentsResult.value : null;
     const hyperliquidData = hyperliquidResult.status === 'fulfilled' ? hyperliquidResult.value : null;
+    const gateioContractsData = gateioContractsResult.status === 'fulfilled' ? gateioContractsResult.value : null;
 
     // 檢查是否所有必需的數據都成功獲取
     if (!binanceRatesData || !bybitRatesData || !bitgetRatesData || !okxTickersData) {
@@ -352,14 +367,12 @@ async function fetchAllExchangeData() {
       .map(item => item.instId);
 
     // 2. 獲取這些合約的資金費率
-    const okxFundingRatesRes = await Promise.all(
+    const okxFundingRatesData = await Promise.allSettled(
       okxUsdtContracts.map(instId => 
-        fetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`)
+        fetchWithRetry(`https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`)
       )
-    );
-
-    const okxFundingRatesData = await Promise.all(
-      okxFundingRatesRes.map(res => res.json())
+    ).then(results => 
+      results.map(result => result.status === 'fulfilled' ? result.value : null)
     );
 
     // 3. 處理資金費率數據
@@ -396,15 +409,40 @@ async function fetchAllExchangeData() {
       })
       .filter(item => item !== null);
 
-    // 添加更詳細的調試日誌
-    // console.log('OKX Debug:', {
-    //   contractsCount: okxUsdtContracts.length,
-    //   ratesCount: okxFundingRatesData.length,
-    //   processedCount: okxRates.length,
-    //   sampleContract: okxUsdtContracts[0],
-    //   sampleRate: okxFundingRatesData[0]?.data?.[0],
-    //   sampleInterval: okxRates[0]?.settlementInterval
-    // });
+    // 處理 Gate.io 數據
+    let gateioRates = [];
+    if (gateioContractsData) {
+      try {
+        gateioRates = gateioContractsData
+          .filter(item => item.name && item.name.endsWith('_USDT'))
+          .map(item => {
+            try {
+              const symbol = item.name.replace('_USDT', '');
+              const fundingRate = parseFloat(item.funding_rate);
+              const interval = parseInt(item.funding_interval) / 3600; // 轉換為小時
+
+              if (!item.name || !fundingRate || isNaN(fundingRate)) {
+                return null;
+              }
+
+              return {
+                symbol,
+                exchange: 'Gate.io',
+                currentRate: (fundingRate * 100).toFixed(4),
+                isSpecialInterval: interval !== 8,
+                settlementInterval: interval,
+                nextFundingTime: new Date(item.funding_next_apply * 1000).toISOString()
+              };
+            } catch (error) {
+              console.error('Gate.io 數據處理錯誤:', error, item);
+              return null;
+            }
+          })
+          .filter(item => item !== null);
+      } catch (error) {
+        console.error('Gate.io 數據處理錯誤:', error);
+      }
+    }
 
     // 合併所有交易所的數據
     const allRates = [
@@ -412,6 +450,7 @@ async function fetchAllExchangeData() {
       ...bybitRates,
       ...bitgetRates,
       ...okxRates,
+      ...gateioRates,
       ...hyperliquidRates
     ].filter(item => {
       // 確保 item 和 currentRate 存在且為有效數值
@@ -426,6 +465,7 @@ async function fetchAllExchangeData() {
       bybit: bybitRates?.length || 0,
       bitget: bitgetRates?.length || 0,
       okx: okxRates?.length || 0,
+      gateio: gateioRates?.length || 0,
       hyperliquid: hyperliquidRates?.length || 0
     });
 
@@ -433,10 +473,11 @@ async function fetchAllExchangeData() {
       success: true,
       data: allRates,
       debug: {
-        bitgetCount: bitgetRates?.length || 0,
         binanceCount: binanceRates?.length || 0,
         bybitCount: bybitRates?.length || 0,
+        bitgetCount: bitgetRates?.length || 0,
         okxCount: okxRates?.length || 0,
+        gateioCount: gateioRates?.length || 0,
         hyperliquidCount: hyperliquidRates?.length || 0,
         totalCount: allRates.length
       }
@@ -446,7 +487,12 @@ async function fetchAllExchangeData() {
     return {
       success: false,
       data: [],
-      error: error.message
+      error: error.message,
+      errorDetails: {
+        name: error.name,
+        code: error.code,
+        cause: error.cause
+      }
     };
   }
 }

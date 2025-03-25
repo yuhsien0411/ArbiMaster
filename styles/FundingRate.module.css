@@ -342,4 +342,40 @@
 
 .clickable:hover {
   background-color: var(--hover-bg);
+}
+
+.errorContainer {
+  margin: 20px auto;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  text-align: center;
+  max-width: 600px;
+}
+
+.errorMessage {
+  color: var(--color-negative);
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.retryButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background-color: var(--text-accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.retryButton:active {
+  transform: translateY(0);
 } 

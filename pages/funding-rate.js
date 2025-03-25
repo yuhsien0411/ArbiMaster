@@ -9,15 +9,16 @@ import styles from '../styles/FundingRate.module.css';
 axiosRetry(axios, {
   retries: 3,
   retryDelay: (retryCount) => {
-    return retryCount * 1000; // 重試延遲時間遞增
+    return Math.min(1000 * Math.pow(2, retryCount - 1), 10000);
   },
   retryCondition: (error) => {
-    // 只在網絡錯誤、超時或特定 HTTP 狀態碼時重試
     return axiosRetry.isNetworkOrIdempotentRequestError(error) ||
            error.code === 'ECONNABORTED' ||
-           (error.response && [408, 500, 502, 503, 504].includes(error.response.status));
+           (error.response && [408, 500, 502, 503, 504].includes(error.response.status)) ||
+           error.message.includes('timeout');
   },
-  shouldResetTimeout: true
+  shouldResetTimeout: true,
+  timeout: 15000
 });
 
 export default function FundingRate() {
@@ -35,15 +36,17 @@ export default function FundingRate() {
   const [isUpdating, setIsUpdating] = useState(false); // 添加更新狀態
   const [showInterval, setShowInterval] = useState(false); // 添加顯示模式狀態
   const [showNormalized, setShowNormalized] = useState(false); // 添加標準化顯示狀態
-  const [selectedExchanges, setSelectedExchanges] = useState(new Set(['Binance', 'Bybit', 'OKX', 'Bitget', 'HyperLiquid']));
+  const [selectedExchanges, setSelectedExchanges] = useState(new Set(['Binance', 'Bybit', 'Bitget', 'OKX', 'Gate.io', 'HyperLiquid']));
   const allExchanges = [
     { id: 'Binance', order: 1 },
     { id: 'Bybit', order: 2 },
     { id: 'Bitget', order: 3 },
     { id: 'OKX', order: 4 },
-    { id: 'HyperLiquid', order: 5 }
+    { id: 'Gate.io', order: 5 },
+    { id: 'HyperLiquid', order: 6 }
   ];
   const [searchTerm, setSearchTerm] = useState('');  // 新增搜尋狀態
+  const [error, setError] = useState(null); // 新增錯誤狀態
 
   // 初始化主題設置
   useEffect(() => {
@@ -75,13 +78,18 @@ export default function FundingRate() {
           setIsUpdating(true);
         }
         
-        const response = await fetch('/api/funding-rates');
-        const data = await response.json();
+        const response = await axios.get('/api/funding-rates', {
+          timeout: 15000,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         
-        if (data.success && Array.isArray(data.data)) {
+        if (response.data.success && Array.isArray(response.data.data)) {
           // 只更新已選擇的交易所數據
           setFundingRates(prevRates => {
-            const newRates = data.data.filter(rate => selectedExchanges.has(rate.exchange));
+            const newRates = response.data.data.filter(rate => selectedExchanges.has(rate.exchange));
             if (JSON.stringify(prevRates) !== JSON.stringify(newRates)) {
               return newRates;
             }
@@ -90,7 +98,7 @@ export default function FundingRate() {
 
           // 同樣只分組已選擇的交易所數據
           setGroupedRates(prevGrouped => {
-            const newGrouped = data.data
+            const newGrouped = response.data.data
               .filter(rate => selectedExchanges.has(rate.exchange))
               .reduce((acc, rate) => {
                 if (!acc[rate.symbol]) {
@@ -108,13 +116,19 @@ export default function FundingRate() {
           
           // 設置 1 小時結算的交易所
           const hourlySet = new Set(['HyperLiquid']);
-          if (data.data.some(rate => rate.exchange === 'Bybit' && rate.isHourly)) {
+          if (response.data.data.some(rate => rate.exchange === 'Bybit' && rate.isHourly)) {
             hourlySet.add('Bybit');
           }
           setHourlyExchanges(hourlySet);
+        } else {
+          console.error('數據格式錯誤:', response.data);
+          // 顯示錯誤信息給用戶
+          setError('數據獲取失敗，請稍後重試');
         }
       } catch (error) {
         console.error('Error:', error);
+        // 顯示具體錯誤信息給用戶
+        setError(error.response?.data?.error || '連接超時，請稍後重試');
       } finally {
         setIsLoading(false);
         setIsUpdating(false);
@@ -321,6 +335,22 @@ export default function FundingRate() {
             ))}
           </div>
         </div>
+
+        {error && (
+          <div className={styles.errorContainer}>
+            <p className={styles.errorMessage}>{error}</p>
+            <button 
+              onClick={() => {
+                setError(null);
+                setIsLoading(true);
+                fetchData();
+              }}
+              className={styles.retryButton}
+            >
+              重試
+            </button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className={styles.loadingContainer}>
