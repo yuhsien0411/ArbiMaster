@@ -14,32 +14,46 @@ if (!global.io) {
 }
 io = global.io;
 
-// 添加重試機制
-const retryFetch = async (url, options = {}, retries = 3) => {
-  for (let i = 0; i < retries; i++) {
+// 添加 fetch 超時和重試函數
+async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+}
+
+// 添加重試函數
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  let lastError;
+  
+  for (let i = 0; i < maxRetries; i++) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超時
-
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
+      const response = await fetchWithTimeout(url, options);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       return response;
     } catch (error) {
-      if (i === retries - 1) throw error;
-      console.log(`重試請求 (${i + 1}/${retries}): ${url}`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      lastError = error;
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        continue;
+      }
     }
   }
-};
+  
+  throw lastError;
+}
 
 // 主要的 API 處理函數
 export default async function handler(req, res) {
@@ -78,7 +92,16 @@ export default async function handler(req, res) {
     res.status(200).json(data);
   } catch (error) {
     console.error('Error fetching funding rates:', error);
-    res.status(500).json({ error: 'Failed to fetch funding rates' });
+    // 如果有緩存數據，在錯誤時返回緩存數據
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
+    res.status(500).json({ 
+      success: false,
+      error: '獲取資金費率失敗',
+      details: error.message,
+      data: []
+    });
   }
 }
 
@@ -87,10 +110,26 @@ async function fetchAllExchangeData() {
     console.log('開始獲取交易所數據...');
     
     const apiCalls = [
-      { name: 'Binance Rates', url: 'https://fapi.binance.com/fapi/v1/premiumIndex' },
-      { name: 'Binance Funding Info', url: 'https://fapi.binance.com/fapi/v1/fundingInfo' },
-      { name: 'Bybit Rates', url: 'https://api.bybit.com/v5/market/tickers?category=linear' },
-      { name: 'Bybit Instruments', url: 'https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000' },
+      { 
+        name: 'Binance Rates', 
+        url: 'https://fapi.binance.com/fapi/v1/premiumIndex',
+        options: { timeout: 15000 }
+      },
+      { 
+        name: 'Binance Funding Info', 
+        url: 'https://fapi.binance.com/fapi/v1/fundingInfo',
+        options: { timeout: 15000 }
+      },
+      { 
+        name: 'Bybit Rates', 
+        url: 'https://api.bybit.com/v5/market/tickers?category=linear',
+        options: { timeout: 15000 }
+      },
+      { 
+        name: 'Bybit Instruments', 
+        url: 'https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000',
+        options: { timeout: 15000 }
+      },
       { 
         name: 'Bitget Rates', 
         url: 'https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES',
@@ -98,7 +137,8 @@ async function fetchAllExchangeData() {
           headers: {
             'Content-Type': 'application/json',
             'locale': 'zh-CN'
-          }
+          },
+          timeout: 15000
         }
       },
       { 
@@ -108,26 +148,36 @@ async function fetchAllExchangeData() {
           headers: {
             'Content-Type': 'application/json',
             'locale': 'zh-CN'
-          }
+          },
+          timeout: 15000
         }
       },
-      { name: 'OKX Tickers', url: 'https://www.okx.com/api/v5/public/mark-price?instType=SWAP' },
-      { name: 'OKX Instruments', url: 'https://www.okx.com/api/v5/public/instruments?instType=SWAP' },
+      { 
+        name: 'OKX Tickers', 
+        url: 'https://www.okx.com/api/v5/public/mark-price?instType=SWAP',
+        options: { timeout: 15000 }
+      },
+      { 
+        name: 'OKX Instruments', 
+        url: 'https://www.okx.com/api/v5/public/instruments?instType=SWAP',
+        options: { timeout: 15000 }
+      },
       { 
         name: 'Hyperliquid', 
         url: 'https://api.hyperliquid.xyz/info',
         options: {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'metaAndAssetCtxs' })
+          body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
+          timeout: 15000
         }
       }
     ];
 
-    const responses = await Promise.all(
+    const responses = await Promise.allSettled(
       apiCalls.map(async ({ name, url, options = {} }) => {
         try {
-          const response = await retryFetch(url, options);
+          const response = await fetchWithRetry(url, options);
           const text = await response.text();
           try {
             return JSON.parse(text);
@@ -143,17 +193,29 @@ async function fetchAllExchangeData() {
       })
     );
 
+    // 處理響應結果
     const [
-      binanceRatesData, 
-      binanceFundingInfoData, 
-      bybitRatesData, 
-      bybitInstrumentsData,
-      bitgetRatesData, 
-      bitgetContractsData,
-      okxTickersData,
-      okxInstrumentsData,
-      hyperliquidData
+      binanceRatesResult,
+      binanceFundingInfoResult,
+      bybitRatesResult,
+      bybitInstrumentsResult,
+      bitgetRatesResult,
+      bitgetContractsResult,
+      okxTickersResult,
+      okxInstrumentsResult,
+      hyperliquidResult
     ] = responses;
+
+    // 提取成功的響應數據
+    const binanceRatesData = binanceRatesResult.status === 'fulfilled' ? binanceRatesResult.value : null;
+    const binanceFundingInfoData = binanceFundingInfoResult.status === 'fulfilled' ? binanceFundingInfoResult.value : null;
+    const bybitRatesData = bybitRatesResult.status === 'fulfilled' ? bybitRatesResult.value : null;
+    const bybitInstrumentsData = bybitInstrumentsResult.status === 'fulfilled' ? bybitInstrumentsResult.value : null;
+    const bitgetRatesData = bitgetRatesResult.status === 'fulfilled' ? bitgetRatesResult.value : null;
+    const bitgetContractsData = bitgetContractsResult.status === 'fulfilled' ? bitgetContractsResult.value : null;
+    const okxTickersData = okxTickersResult.status === 'fulfilled' ? okxTickersResult.value : null;
+    const okxInstrumentsData = okxInstrumentsResult.status === 'fulfilled' ? okxInstrumentsResult.value : null;
+    const hyperliquidData = hyperliquidResult.status === 'fulfilled' ? hyperliquidResult.value : null;
 
     // 檢查是否所有必需的數據都成功獲取
     if (!binanceRatesData || !bybitRatesData || !bitgetRatesData || !okxTickersData) {

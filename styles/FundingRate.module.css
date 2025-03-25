@@ -234,11 +234,12 @@
 
 .symbolCell {
   font-weight: 500;
-  white-space: nowrap;
+  color: var(--text-accent);
 }
 
 .rateCell {
-  position: relative;
+  text-align: right;
+  padding-right: 1rem;
 }
 
 .rateValue {
@@ -332,4 +333,13 @@
     flex: 1;
     text-align: center;
   }
+}
+
+.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable:hover {
+  background-color: var(--hover-bg);
 } 

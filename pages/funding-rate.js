@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import styles from '../styles/FundingRate.module.css';
@@ -20,6 +21,7 @@ axiosRetry(axios, {
 });
 
 export default function FundingRate() {
+  const router = useRouter();
   // 狀態管理
   const [fundingRates, setFundingRates] = useState([]); // 原始資金費率數據
   const [groupedRates, setGroupedRates] = useState({}); // 按幣種分組的資金費率
@@ -233,6 +235,11 @@ export default function FundingRate() {
     });
   };
 
+  // 添加導航到歷史頁面的函數
+  const navigateToHistory = (symbol) => {
+    router.push(`/history/${symbol}`);
+  };
+
   // 等待客戶端渲染
   if (!mounted) return null;
 
@@ -357,7 +364,12 @@ export default function FundingRate() {
                   .filter(symbol => !searchTerm || symbol.toLowerCase().includes(searchTerm.toLowerCase()))
                   .map(symbol => (
                     <tr key={symbol}>
-                      <td className={`${styles.td} ${styles.symbolCell}`}>{symbol}</td>
+                      <td 
+                        className={`${styles.td} ${styles.symbolCell} ${styles.clickable}`}
+                        onClick={() => navigateToHistory(symbol)}
+                      >
+                        {symbol}
+                      </td>
                       {exchanges.map(exchange => {
                         const data = groupedRates[symbol]?.[exchange];
                         if (!data) return <td key={exchange} className={`${styles.td} ${styles.emptyCell}`}>-</td>;
@@ -371,7 +383,11 @@ export default function FundingRate() {
                         const rateClass = normalizedRate > 0 ? styles.positive : normalizedRate < 0 ? styles.negative : '';
 
                         return (
-                          <td key={exchange} className={`${styles.td} ${styles.rateCell} ${rateClass}`}>
+                          <td 
+                            key={exchange} 
+                            className={`${styles.td} ${styles.rateCell} ${rateClass} ${styles.clickable}`}
+                            onClick={() => navigateToHistory(symbol)}
+                          >
                             <span className={styles.rateValue}>{displayRate}%</span>
                             {showInterval && data.settlementInterval && (
                               <span className={styles.intervalBadge}>{data.settlementInterval}H</span>
