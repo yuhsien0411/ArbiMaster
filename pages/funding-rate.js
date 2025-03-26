@@ -272,6 +272,13 @@ export default function FundingRate() {
         </div>
         <div className={styles.controls}>
           <button 
+            className={styles.homeButton}
+            onClick={() => router.push('/')}
+            aria-label="返回主頁"
+          >
+            返回主頁
+          </button>
+          <button 
             className={styles.themeToggle} 
             onClick={toggleTheme}
             aria-label={isDarkMode ? "切換至淺色模式" : "切換至深色模式"}
