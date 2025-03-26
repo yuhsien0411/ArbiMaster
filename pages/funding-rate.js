@@ -358,7 +358,7 @@ export default function FundingRate() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th onClick={() => handleSort('symbol')} className={`${styles.th} ${styles.sortable}`}>
+                  <th onClick={() => handleSort('symbol')} className={`${styles.th} ${styles.sortable} ${styles.symbolHeader}`}>
                     幣種
                     {sortConfig.key === 'symbol' && (
                       <span className={styles.sortIndicator}>
