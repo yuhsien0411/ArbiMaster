@@ -11,7 +11,9 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import SearchIcon from '@mui/icons-material/Search';
+import HomeIcon from '@mui/icons-material/Home';
 import { io } from 'socket.io-client';
+import { useRouter } from 'next/router';
 
 // 預設顯示的八個幣種
 const DEFAULT_COINS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'DOT', 'LINK', 'ADA'];
@@ -64,6 +66,7 @@ const customTheme = {
 };
 
 export default function OpenInterest() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [openInterestData, setOpenInterestData] = useState([]);
   const [lastUpdated, setLastUpdated] = useState('');
@@ -296,127 +299,40 @@ export default function OpenInterest() {
   };
 
   return (
-    <>
+    <Box sx={{ bgcolor: currentTheme.background, minHeight: '100vh', pb: 4 }}>
       <Head>
-        <title>未平倉合約 - 加密貨幣數據中心</title>
-        <meta name="description" content="查看合約未平倉量數據" />
+        <title>未平倉合約數據中心 | ArbiMaster</title>
+        <meta name="description" content="即時查詢各大交易所永續合約未平倉合約數據，掌握市場走勢" />
       </Head>
-
-      <Container maxWidth="lg" sx={{ 
-        py: 4,
-        px: { xs: 2, sm: 3 },
-        backgroundColor: currentTheme.background,
-        minHeight: '100vh'
-      }}>
-        {/* 頁面標題區域 */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 4,
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: { xs: 2, sm: 0 }
-        }}>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              color: currentTheme.text.primary,
-              fontWeight: 700,
-              fontSize: { xs: '1.5rem', sm: '2rem' },
-              textAlign: { xs: 'center', sm: 'left' }
-            }}
-          >
-            未平倉合約
+      
+      <Container maxWidth="lg" sx={{ pt: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" color={currentTheme.text.primary} sx={{ fontWeight: 600 }}>
+            未平倉合約數據
           </Typography>
-          
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 2, 
-            alignItems: 'center',
-            width: { xs: '100%', sm: 'auto' },
-            justifyContent: { xs: 'center', sm: 'flex-end' }
-          }}>
-            <TextField
-              size="small"
-              placeholder="搜尋其他幣種..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: currentTheme.text.secondary }} />
-                  </InputAdornment>
-                ),
-                sx: {
-                  color: currentTheme.text.primary,
-                  backgroundColor: currentTheme.paper,
-                  borderRadius: '8px',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: currentTheme.divider,
-                    borderWidth: '1px',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: darkMode ? '#30363d' : '#1a1a1a',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#2f81f7',
-                    borderWidth: '1px',
-                  }
-                }
+          <Box>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<HomeIcon />}
+              onClick={() => router.push('/')}
+              sx={{ mr: 2 }}
+            >
+              返回主頁
+            </Button>
+            <IconButton
+              onClick={() => {
+                const newDarkMode = !darkMode;
+                setDarkMode(newDarkMode);
+                localStorage.setItem('darkMode', newDarkMode.toString());
               }}
-              sx={{ 
-                width: { xs: '100%', sm: '200px' },
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  transform: 'translateY(-1px)'
-                }
-              }}
-            />
-            
-            <Tooltip title={darkMode ? "切換到亮色模式" : "切換到暗色模式"}>
-              <IconButton 
-                onClick={() => setDarkMode(!darkMode)} 
-                size="small"
-                sx={{
-                  backgroundColor: currentTheme.paper,
-                  borderRadius: '8px',
-                  padding: '8px',
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    backgroundColor: darkMode ? '#1c2128' : '#f0f0f0',
-                    transform: 'translateY(-1px)'
-                  }
-                }}
-              >
-                {darkMode ? <LightModeIcon sx={{ color: '#c9d1d9' }} /> : <DarkModeIcon />}
-              </IconButton>
-            </Tooltip>
-            
-            <Tooltip title="刷新數據">
-              <span>
-                <IconButton 
-                  onClick={fetchOpenInterestData} 
-                  size="small" 
-                  disabled={loading}
-                  sx={{
-                    backgroundColor: currentTheme.paper,
-                    borderRadius: '8px',
-                    padding: '8px',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      backgroundColor: darkMode ? '#1c2128' : '#f0f0f0',
-                      transform: 'translateY(-1px)'
-                    }
-                  }}
-                >
-                  <RefreshIcon sx={{ color: loading ? currentTheme.text.secondary : currentTheme.text.primary }} />
-                </IconButton>
-              </span>
-            </Tooltip>
+              sx={{ color: currentTheme.text.primary }}
+            >
+              {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
           </Box>
         </Box>
-
+        
         {/* 數據統計卡片 */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
@@ -742,6 +658,6 @@ export default function OpenInterest() {
           </Typography>
         </Box>
       </Container>
-    </>
+    </Box>
   );
 } 

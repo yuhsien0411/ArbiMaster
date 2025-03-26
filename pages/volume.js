@@ -1,8 +1,11 @@
 import React from 'react';
 import Head from 'next/head';
 import styles from '../styles/Volume.module.css';
+import { useRouter } from 'next/router';
 
 export default function Volume() {
+  const router = useRouter();
+  
   return (
     <>
       <Head>
@@ -11,7 +14,15 @@ export default function Volume() {
       </Head>
 
       <div className={styles.container}>
-        <h1 className={styles.pageTitle}>交易量分析</h1>
+        <div className={styles.header}>
+          <h1 className={styles.pageTitle}>交易量分析</h1>
+          <button 
+            className={styles.homeButton}
+            onClick={() => router.push('/')}
+          >
+            返回主頁
+          </button>
+        </div>
         
         <div className={styles.statsGrid}>
           <div className={styles.statsCard}>

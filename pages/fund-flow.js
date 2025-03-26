@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import {
   Container,
   Typography,
@@ -12,13 +13,15 @@ import {
   Tooltip,
   IconButton,
   Paper,
-  Divider
+  Divider,
+  Button
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import InfoIcon from '@mui/icons-material/Info';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HomeIcon from '@mui/icons-material/Home';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -46,6 +49,7 @@ const InfoCard = styled(Paper)(({ theme }) => ({
 }));
 
 export default function FundFlow() {
+  const router = useRouter();
   const [flowData, setFlowData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -111,15 +115,24 @@ export default function FundFlow() {
       </Head>
 
       <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          align="center"
-          gutterBottom
-          sx={{ mb: 4, fontWeight: 'bold' }}
-        >
-          交易所資金流向
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ mb: 0, fontWeight: 'bold' }}
+          >
+            交易所資金流向
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary"
+            startIcon={<HomeIcon />}
+            onClick={() => router.push('/')}
+          >
+            返回主頁
+          </Button>
+        </Box>
 
         <InfoCard elevation={0}>
           <Box display="flex" alignItems="center" mb={1}>

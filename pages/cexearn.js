@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import axios from 'axios';
 import styles from '../styles/CexEarn.module.css';
+import { useRouter } from 'next/router';
 
 export default function CexEarn() {
+  const router = useRouter();
   const [earnData, setEarnData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,7 +95,15 @@ export default function CexEarn() {
       </Head>
 
       <main>
-        <h1 className={styles.pageTitle}>CEX 理財收益</h1>
+        <div className={styles.header}>
+          <h1 className={styles.pageTitle}>CEX 理財收益</h1>
+          <button 
+            className={styles.homeButton}
+            onClick={() => router.push('/')}
+          >
+            返回主頁
+          </button>
+        </div>
         
         <div className={styles.filterContainer}>
           <label htmlFor="coin-filter">篩選幣種：</label>
