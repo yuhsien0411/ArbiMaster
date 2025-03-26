@@ -278,6 +278,43 @@ export default function FundingRate() {
           >
             返回主頁
           </button>
+          <div className={styles.navButtons}>
+            <button 
+              className={styles.navButton}
+              onClick={() => router.push('/cexearn')}
+              aria-label="中心化交易所收益"
+            >
+              CEX收益
+            </button>
+            <button 
+              className={styles.navButton}
+              onClick={() => router.push('/fear-greed')}
+              aria-label="恐懼貪婪指數"
+            >
+              恐懼貪婪
+            </button>
+            <button 
+              className={styles.navButton}
+              onClick={() => router.push('/fund-flow')}
+              aria-label="資金流向"
+            >
+              資金流向
+            </button>
+            <button 
+              className={styles.navButton}
+              onClick={() => router.push('/open-interest')}
+              aria-label="未平倉合約"
+            >
+              未平倉合約
+            </button>
+            <button 
+              className={styles.navButton}
+              onClick={() => router.push('/volume')}
+              aria-label="交易量"
+            >
+              交易量
+            </button>
+          </div>
           <button 
             className={styles.themeToggle} 
             onClick={toggleTheme}
