@@ -306,32 +306,119 @@ export default function OpenInterest() {
       </Head>
       
       <Container maxWidth="lg" sx={{ pt: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" color={currentTheme.text.primary} sx={{ fontWeight: 600 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: { xs: 'wrap', md: 'nowrap' }, gap: 2 }}>
+          <Typography variant="h4" component="h1" color={currentTheme.text.primary} sx={{ fontWeight: 600, mr: 2 }}>
             未平倉合約數據
           </Typography>
-          <Box>
+          
+          <Box sx={{ flex: 1, mr: 2, minWidth: { xs: '100%', md: 'auto' }, order: { xs: 3, md: 2 } }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="搜尋幣種..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: currentTheme.text.secondary }} />
+                  </InputAdornment>
+                ),
+                sx: {
+                  backgroundColor: currentTheme.paper,
+                  color: currentTheme.text.primary,
+                  borderRadius: '8px',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: currentTheme.divider,
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkMode ? '#30363d' : '#1a1a1a',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3b82f6',
+                  }
+                }
+              }}
+            />
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: 2, order: { xs: 2, md: 3 } }}>
             <Button
               variant="contained"
               color="primary"
               startIcon={<HomeIcon />}
               onClick={() => router.push('/')}
-              sx={{ mr: 2 }}
+              sx={{ whiteSpace: 'nowrap' }}
             >
               返回主頁
             </Button>
-            <IconButton
-              onClick={() => {
-                const newDarkMode = !darkMode;
-                setDarkMode(newDarkMode);
-                localStorage.setItem('darkMode', newDarkMode.toString());
-              }}
-              sx={{ color: currentTheme.text.primary }}
-            >
-              {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
-            </IconButton>
+            <Tooltip title={darkMode ? "切換到亮色模式" : "切換到暗色模式"}>
+              <IconButton
+                onClick={() => {
+                  const newDarkMode = !darkMode;
+                  setDarkMode(newDarkMode);
+                  localStorage.setItem('darkMode', newDarkMode.toString());
+                }}
+                sx={{ 
+                  color: currentTheme.text.primary,
+                  backgroundColor: currentTheme.paper,
+                  border: darkMode ? '1px solid #30363d' : 'none',
+                  '&:hover': {
+                    backgroundColor: darkMode ? '#1c2128' : '#f0f0f0',
+                  }
+                }}
+              >
+                {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="刷新數據">
+              <IconButton
+                onClick={fetchOpenInterestData}
+                disabled={loading}
+                sx={{ 
+                  color: loading ? currentTheme.text.secondary : currentTheme.text.primary,
+                  backgroundColor: currentTheme.paper,
+                  border: darkMode ? '1px solid #30363d' : 'none',
+                  '&:hover': {
+                    backgroundColor: darkMode ? '#1c2128' : '#f0f0f0',
+                  }
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
+
+        {/* 搜尋結果提示 */}
+        {searchQuery && (
+          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="body1" color={currentTheme.text.primary}>
+              搜尋 "{searchQuery}" 的結果: {filteredData.length} 個交易對
+            </Typography>
+            {filteredData.length > 0 && searchQuery && (
+              <Button 
+                size="small" 
+                variant="outlined" 
+                onClick={() => {
+                  setSearchQuery('');
+                  setIsSearching(false);
+                  fetchOpenInterestData();
+                }}
+                sx={{ 
+                  borderColor: currentTheme.divider,
+                  color: currentTheme.text.primary,
+                  '&:hover': {
+                    borderColor: currentTheme.text.primary,
+                    backgroundColor: 'transparent'
+                  }
+                }}
+              >
+                清除搜尋
+              </Button>
+            )}
+          </Box>
+        )}
         
         {/* 數據統計卡片 */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
