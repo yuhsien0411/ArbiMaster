@@ -161,6 +161,7 @@
 .interest { background: linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%); }
 .fear { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); }
 .earn { background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); }
+.leveraged { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
 
 .featureStats {
   background: var(--bg-highlight);

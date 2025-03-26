@@ -118,6 +118,14 @@ export default function Home() {
                 stats: { label: '支持幣種', value: 'USDT' },
                 title: 'CEX 收益分析',
                 description: '對比各大交易所理財收益，優化資產配置'
+              },
+              {
+                href: '/leveraged-spot',
+                icon: '🔄',
+                iconClass: styles.leveraged,
+                stats: { label: '槓桿倍數', value: '最高10x' },
+                title: '槓桿現貨',
+                description: '追蹤槓桿現貨交易數據，把握市場趨勢和投資機會'
               }
             ].map((feature, index) => (
               <Link href={feature.href} key={index} className={styles.featureCard}>
