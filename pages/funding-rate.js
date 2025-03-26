@@ -258,63 +258,59 @@ export default function FundingRate() {
   if (!mounted) return null;
 
   return (
-    <div className={`${styles.container} ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+    <div className={`${styles.container} ${isDarkMode ? styles.darkMode : ''}`}>
       <Head>
-        <title>永續合約資金費率比較</title>
-        <meta name="description" content="永續合約資金費率比較" />
+        <title>永續合約資金費率比較 | ArbiMaster</title>
+        <meta name="description" content="實時監控主流交易所資金費率，掌握市場動向" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <div className={styles.headerContainer}>
-          <div className={styles.titleContainer}>
-            <h1 className={styles.title}>永續合約資金費率比較</h1>
-            <p className={styles.subtitle}>實時監控主流交易所資金費率，掌握市場動向</p>
-          </div>
-          <div className={styles.controlsContainer}>
-            <div className={styles.searchBox}>
-              <input
-                type="text"
-                placeholder="搜尋幣種..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles.searchInput}
-              />
-              <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div className={styles.buttonsContainer}>
-              <button
-                onClick={() => setShowInterval(!showInterval)}
-                className={`${styles.controlButton} ${showInterval ? styles.active : ''}`}
-              >
-                顯示結算週期
-              </button>
-              <button
-                onClick={() => setShowNormalized(!showNormalized)}
-                className={`${styles.controlButton} ${showNormalized ? styles.active : ''}`}
-              >
-                標準化費率
-              </button>
-              <button
-                onClick={toggleTheme}
-                className={styles.themeToggle}
-                title={isDarkMode ? "切換至淺色模式" : "切換至深色模式"}
-              >
-                {isDarkMode ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" fill="currentColor"/>
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21.5287 15.9294C21.3687 15.6594 20.9187 15.2394 19.7987 15.4394C19.1787 15.5494 18.5487 15.5994 17.9187 15.5694C15.5887 15.4694 13.4787 14.3994 12.0087 12.7494C10.7087 11.2994 9.90873 9.40938 9.89873 7.36938C9.89873 6.22938 10.1187 5.12938 10.5687 4.08938C11.0087 3.07938 10.6987 2.54938 10.4787 2.32938C10.2487 2.09938 9.70873 1.77938 8.64873 2.21938C4.55873 3.93938 2.02873 8.03938 2.32873 12.4294C2.62873 16.5594 5.52873 20.0894 9.36873 21.4194C10.2887 21.7394 11.2587 21.9294 12.2587 21.9694C12.4187 21.9794 12.5787 21.9894 12.7387 21.9894C16.0887 21.9894 19.2287 20.4094 21.2087 17.7194C21.8787 16.7894 21.6987 16.1994 21.5287 15.9294Z" fill="currentColor"/>
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
+      <header className={styles.header}>
+        <div className={styles.titleArea}>
+          <h1 className={styles.title}>永續合約資金費率比較</h1>
+          <p className={styles.subtitle}>實時監控主流交易所資金費率，掌握市場動向</p>
         </div>
+        <div className={styles.controls}>
+          <button 
+            className={styles.themeToggle} 
+            onClick={toggleTheme}
+            aria-label={isDarkMode ? "切換至淺色模式" : "切換至深色模式"}
+          >
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
+      </header>
+      
+      <div className={styles.toolbar}>
+        <div className={styles.searchBox}>
+          <input
+            type="text"
+            placeholder="搜尋幣種..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={styles.searchInput}
+          />
+          <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <div className={styles.buttonsContainer}>
+          <button
+            onClick={() => setShowInterval(!showInterval)}
+            className={`${styles.controlButton} ${showInterval ? styles.active : ''}`}
+          >
+            顯示結算週期
+          </button>
+          <button
+            onClick={() => setShowNormalized(!showNormalized)}
+            className={`${styles.controlButton} ${showNormalized ? styles.active : ''}`}
+          >
+            標準化費率
+          </button>
+        </div>
+      </div>
 
+      <main>
         <div className={styles.exchangesContainer}>
           <div className={styles.exchangesHeader}>
             <h2>交易所選擇</h2>

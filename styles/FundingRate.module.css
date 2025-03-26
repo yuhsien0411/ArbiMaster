@@ -13,23 +13,35 @@
   border: 1px solid var(--border-color);
 }
 
-.titleContainer {
-  margin-bottom: 1.5rem;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.titleArea {
+  max-width: 600px;
 }
 
 .title {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
-  background: var(--text-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-primary);
 }
 
 .subtitle {
+  font-size: 1rem;
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  margin: 0;
+}
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .controlsContainer {
@@ -41,34 +53,19 @@
 }
 
 .searchBox {
+  flex-grow: 1;
   position: relative;
-  flex: 1;
-  max-width: 300px;
+  min-width: 200px;
 }
 
-.searchInput {
+.searchBox input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  padding: 8px 12px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-highlight);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: var(--border-highlight);
-  box-shadow: 0 0 0 2px var(--border-highlight-alpha);
-}
-
-.searchIcon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
 }
 
 .buttonsContainer {
@@ -98,17 +95,17 @@
 }
 
 .themeToggle {
-  background: none;
-  border: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 36px;
+  height: 36px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  color: var(--text-primary);
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  color: var(--text-primary);
 }
 
 .themeToggle:hover {
@@ -378,4 +375,12 @@
 
 .retryButton:active {
   transform: translateY(0);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+  align-items: center;
 } 
