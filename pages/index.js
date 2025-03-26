@@ -126,6 +126,14 @@ export default function Home() {
                 stats: { label: '槓桿倍數', value: '最高10x' },
                 title: '槓桿現貨',
                 description: '追蹤槓桿現貨交易數據，把握市場趨勢和投資機會'
+              },
+              {
+                href: '/lending',
+                icon: '💎',
+                iconClass: styles.lending,
+                stats: { label: '支持幣種', value: '10+' },
+                title: '質押借貸',
+                description: '比較各大交易所的質押借貸利率，優化資產利用效率'
               }
             ].map((feature, index) => (
               <Link href={feature.href} key={index} className={styles.featureCard}>
