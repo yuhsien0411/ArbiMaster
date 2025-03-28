@@ -1,6 +1,12 @@
 # ArbiMaster
 
-**版本**：1.3.0
+## 版本信息
+- 當前版本：v1.0.0
+- 更新日期：2024-03-21
+- 更新內容：
+  - 新增 Gate.io 槓桿現貨利率數據獲取
+  - 優化數據處理邏輯
+  - 修復已知問題
 
 ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多個交易所的資金費率、資金流向、持倉量等數據的即時比較和分析。
 
@@ -345,5 +351,182 @@ MIT License
 ## 免責聲明
 
 本工具僅供參考，不構成投資建議。使用本工具進行交易決策的風險由使用者自行承擔。
+
+## 環境變量
+請確保設置以下環境變量：
+```
+BINANCE_API_KEY=your_binance_api_key
+BINANCE_API_SECRET=your_binance_api_secret
+GATEIO_API_KEY=your_gateio_api_key
+GATEIO_API_SECRET=your_gateio_api_secret
+```
+
+## 安裝和運行
+1. 克隆項目
+```bash
+git clone https://github.com/yourusername/ArbiMaster.git
+```
+
+2. 安裝依賴
+```bash
+npm install
+```
+
+3. 運行開發服務器
+```bash
+npm run dev
+```
+
+4. 構建生產版本
+```bash
+npm run build
+```
+
+## 使用說明
+1. 訪問 http://localhost:3000
+2. 在搜索框中輸入幣種代碼（如 BTC、ETH 等）
+3. 查看各交易所的槓桿現貨利率數據
+
+## 注意事項
+- 請確保 API 密鑰的安全性
+- 建議在測試環境中先進行測試
+- 定期更新 API 密鑰
+
+## 貢獻指南
+歡迎提交 Issue 和 Pull Request
+
+## 授權
+MIT License
+
+# Bitget API 錯誤處理與簽名生成
+
+## 簽名生成邏輯
+
+### 簽名格式
+當queryString不為空時：
+```
+timestamp + method.toUpperCase() + requestPath + "?" + queryString + body
+```
+
+當queryString為空時：
+```
+timestamp + method.toUpperCase() + requestPath + body
+```
+
+### 示例
+
+1. 獲取合約深度信息（GET請求）：
+```
+Timestamp = 16273667805456
+Method = "GET"
+requestPath = "/api/mix/v2/market/depth"
+queryString = "limit=20&symbol=BTCUSDT"
+
+待簽名字符串：
+16273667805456GET/api/mix/v2/market/depth?limit=20&symbol=BTCUSDT
+```
+
+2. 合約下單（POST請求）：
+```
+Timestamp = 16273667805456
+Method = "POST"
+requestPath = "/api/v2/mix/order/place-order"
+body = {"productType":"usdt-futures","symbol":"BTCUSDT","size":"8","marginMode":"crossed","side":"buy","orderType":"limit","clientOid":"123456"}
+
+待簽名字符串：
+16273667805456POST/api/v2/mix/order/place-order{"productType":"usdt-futures","symbol":"BTCUSDT","size":"8","marginMode":"crossed","side":"buy","orderType":"limit","clientOid":"123456"}
+```
+
+### 簽名生成步驟
+
+1. 使用私鑰secretkey進行HMAC SHA256加密：
+```javascript
+const hmac = crypto.createHmac('sha256', secretKey);
+hmac.update(message);
+const signature = hmac.digest('base64');
+```
+
+2. 對Signature進行base64編碼：
+```javascript
+const signature = base64.encode(signature);
+```
+
+## 常見錯誤處理
+
+### 1. 簽名錯誤
+- 錯誤碼：40001
+- 原因：簽名生成不正確
+- 解決方案：
+  - 檢查timestamp格式是否正確
+  - 確保method大寫
+  - 驗證queryString格式
+  - 確認body格式（JSON字符串）
+
+### 2. API Key錯誤
+- 錯誤碼：40002
+- 原因：API Key無效或過期
+- 解決方案：
+  - 檢查API Key是否正確
+  - 確認API Key是否已啟用
+  - 驗證API Key權限
+
+### 3. 時間戳錯誤
+- 錯誤碼：40003
+- 原因：請求時間戳與服務器時間差異過大
+- 解決方案：
+  - 確保本地時間準確
+  - 使用服務器時間同步
+
+### 4. 請求參數錯誤
+- 錯誤碼：40004
+- 原因：請求參數格式不正確
+- 解決方案：
+  - 檢查參數名稱是否正確
+  - 驗證參數值格式
+  - 確認必填參數是否完整
+
+## 最佳實踐
+
+1. 請求頭設置：
+```javascript
+headers: {
+  'ACCESS-KEY': apiKey,
+  'ACCESS-SIGN': signature,
+  'ACCESS-PASSPHRASE': passphrase,
+  'ACCESS-TIMESTAMP': timestamp,
+  'Content-Type': 'application/json'
+}
+```
+
+2. 錯誤處理：
+```javascript
+try {
+  const response = await axios.get(url, {
+    headers: headers,
+    params: params
+  });
+  
+  if (response.data.code === '00000') {
+    // 成功處理
+  } else {
+    console.error('API錯誤:', response.data);
+  }
+} catch (error) {
+  console.error('請求失敗:', error.message);
+  if (error.response?.data) {
+    console.error('錯誤詳情:', error.response.data);
+  }
+}
+```
+
+3. 參數處理：
+```javascript
+function parseParamsToStr(params) {
+  if (!params || Object.keys(params).length === 0) return '';
+  return Object.entries(params)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+}
+```
 
 

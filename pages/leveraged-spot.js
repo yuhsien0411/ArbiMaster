@@ -9,11 +9,12 @@ export default function LeveragedSpot() {
   const [leveragedData, setLeveragedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: 'leverage', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [filterExchange, setFilterExchange] = useState('all');
   const [availableExchanges, setAvailableExchanges] = useState([]);
   const [bybitData, setBybitData] = useState([]);
   const [ratePeriod, setRatePeriod] = useState('1h');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const exchanges = ['Binance', 'Bybit', 'Bitget', 'OKX', 'Gate.io'];
   const ratePeriods = [
@@ -35,7 +36,7 @@ export default function LeveragedSpot() {
         return rate;
     }
   };
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -75,11 +76,68 @@ export default function LeveragedSpot() {
   const getExchangeData = (exchange, currency) => {
     const data = leveragedData.find(item => item.exchange === exchange && item.pair.startsWith(currency)) || null;
     if (data) {
-      const hourlyRate = parseFloat(data.hourlyBorrowRate);
+      let hourlyRate = parseFloat(data.hourlyBorrowRate);
+      if (exchange === 'Binance' || exchange === 'Bybit' || exchange === 'OKX') {
+        hourlyRate = hourlyRate * 100;
+      }
+      if (exchange === 'OKX') {
+        hourlyRate = hourlyRate / 24;
+      }
       const calculatedRate = calculateRate(hourlyRate, ratePeriod);
       return `${calculatedRate.toFixed(8)}%`;
     }
     return null;
+  };
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedData = () => {
+    const currencies = getAllCurrencies();
+    if (!sortConfig.key) return currencies;
+
+    let sortedCurrencies = [...currencies].sort((a, b) => {
+      if (sortConfig.key === 'currency') {
+        return sortConfig.direction === 'asc' 
+          ? a.localeCompare(b)
+          : b.localeCompare(a);
+      }
+
+      // 按利率排序
+      const rateA = getExchangeData(sortConfig.key, a);
+      const rateB = getExchangeData(sortConfig.key, b);
+      
+      if (!rateA && !rateB) return 0;
+      if (!rateA) return 1;
+      if (!rateB) return -1;
+      
+      const numA = parseFloat(rateA);
+      const numB = parseFloat(rateB);
+      
+      return sortConfig.direction === 'asc' 
+        ? numA - numB
+        : numB - numA;
+    });
+
+    // 如果有搜尋查詢，過濾結果
+    if (searchQuery) {
+      const query = searchQuery.toUpperCase();
+      sortedCurrencies = sortedCurrencies.filter(currency => 
+        currency.toUpperCase().includes(query)
+      );
+    }
+
+    return sortedCurrencies;
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return '↕️';
+    return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
   return (
@@ -92,12 +150,23 @@ export default function LeveragedSpot() {
       <main>
         <div className={styles.header}>
           <h1 className={styles.pageTitle}>槓桿現貨利率</h1>
-          <button 
-            className={styles.homeButton}
-            onClick={() => router.push('/')}
-          >
-            返回主頁
-          </button>
+          <div className={styles.headerControls}>
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                placeholder="搜尋幣種..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
+            <button 
+              className={styles.homeButton}
+              onClick={() => router.push('/')}
+            >
+              返回主頁
+            </button>
+          </div>
         </div>
 
         <div className={styles.ratePeriodSelector}>
@@ -121,14 +190,22 @@ export default function LeveragedSpot() {
             <table className={styles.dataTable}>
               <thead>
                 <tr>
-                  <th>幣種</th>
+                  <th onClick={() => handleSort('currency')} className={styles.sortableHeader}>
+                    幣種 {getSortIcon('currency')}
+                  </th>
                   {exchanges.map(exchange => (
-                    <th key={exchange}>{exchange}</th>
+                    <th 
+                      key={exchange} 
+                      onClick={() => handleSort(exchange)}
+                      className={styles.sortableHeader}
+                    >
+                      {exchange} {getSortIcon(exchange)}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {getAllCurrencies().map(currency => (
+                {getSortedData().map(currency => (
                   <tr key={currency}>
                     <td className={styles.currencyCell}>{currency}</td>
                     {exchanges.map(exchange => {
@@ -148,11 +225,15 @@ export default function LeveragedSpot() {
 
         <div className={styles.infoBox}>
           <h3>關於槓桿現貨利率</h3>
-          <p>本頁面展示了各大交易所的槓桿現貨借貸利率。您可以選擇查看不同時間週期的利率：</p>
+          <p>本頁面展示了各大交易所的槓桿現貨借貸利率。您可以：</p>
           <ul>
-            <li>1小時：每小時的借貸利率</li>
-            <li>1天：每天的借貸利率（小時利率 × 24）</li>
-            <li>1年：每年的借貸利率（小時利率 × 24 × 365）</li>
+            <li>點擊表頭進行排序（幣種、各交易所利率）</li>
+            <li>選擇不同時間週期的利率：</li>
+            <ul>
+              <li>1小時：每小時的借貸利率</li>
+              <li>1天：每天的借貸利率（小時利率 × 24）</li>
+              <li>1年：每年的借貸利率（小時利率 × 24 × 365）</li>
+            </ul>
           </ul>
           <p>注意：實際借貸利率可能會根據市場情況和您的 VIP 等級而有所不同。</p>
         </div>
