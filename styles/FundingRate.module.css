@@ -1,0 +1,416 @@
+.container {
+  min-height: 100vh;
+  padding: 2rem;
+  background: var(--bg-primary);
+  font-family: 'Inter', 'Noto Sans TC', sans-serif;
+}
+
+.headerContainer {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.titleArea {
+  max-width: 600px;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.homeButton {
+  background: var(--text-accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.homeButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.homeButton:active {
+  transform: translateY(0);
+}
+
+.controlsContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  flex-grow: 1;
+  position: relative;
+  min-width: 200px;
+}
+
+.searchBox input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.buttonsContainer {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.controlButton {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-highlight);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.controlButton:hover {
+  background: var(--hover-bg);
+}
+
+.controlButton.active {
+  background: var(--text-accent);
+  color: white;
+  border-color: var(--text-accent);
+}
+
+.themeToggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+
+.themeToggle:hover {
+  background-color: var(--hover-bg);
+}
+
+.exchangesContainer {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.exchangesHeader {
+  margin-bottom: 1rem;
+}
+
+.exchangesHeader h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.exchangesHeader p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.exchangeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.exchangeButton {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-highlight);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.exchangeButton:hover {
+  background: var(--hover-bg);
+}
+
+.exchangeButton.selected {
+  background: var(--text-accent);
+  color: white;
+  border-color: var(--text-accent);
+}
+
+.hourlyBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--text-accent);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tableContainer {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.th {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+  position: relative;
+}
+
+.symbolHeader {
+  text-align: left;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  background: var(--hover-bg);
+}
+
+.active {
+  color: var(--text-accent);
+}
+
+.sortIndicator {
+  margin-left: 0.5rem;
+  color: var(--text-accent);
+}
+
+.hourlyIndicator {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-accent);
+}
+
+.td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.symbolCell {
+  font-weight: 500;
+  color: var(--text-accent);
+}
+
+.rateCell {
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+.rateValue {
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+}
+
+.positive {
+  color: var(--color-positive);
+}
+
+.negative {
+  color: var(--color-negative);
+}
+
+.intervalBadge {
+  margin-left: 0.5rem;
+  padding: 2px 6px;
+  border-radius: 12px;
+  background: var(--bg-highlight);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.emptyCell {
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--text-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.nonStandardBadge {
+  color: #fbbf24;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .headerContainer,
+  .exchangesContainer {
+    padding: 1rem;
+  }
+
+  .controlsContainer {
+    flex-direction: column;
+  }
+
+  .searchBox {
+    max-width: 100%;
+  }
+
+  .buttonsContainer {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .exchangeButtons {
+    justify-content: space-between;
+  }
+
+  .exchangeButton {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable:hover {
+  background-color: var(--hover-bg);
+}
+
+.errorContainer {
+  margin: 20px auto;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  text-align: center;
+  max-width: 600px;
+}
+
+.errorMessage {
+  color: var(--color-negative);
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.retryButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background-color: var(--text-accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.retryButton:active {
+  transform: translateY(0);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+  align-items: center;
+} 

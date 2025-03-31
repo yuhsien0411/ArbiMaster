@@ -1,0 +1,117 @@
+/* 
+  全局CSS，主要包含通用組件樣式
+  主題變量已經移至theme.css
+*/
+
+body {
+  margin: 0;
+}
+
+/* 表格相關通用樣式 */
+.rates-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.rates-table table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.rates-table th {
+  padding: 12px;
+  text-align: center;
+  background-color: var(--table-header-bg);
+  border: 1px solid var(--table-border);
+  white-space: nowrap;
+}
+
+.rates-table td {
+  padding: 8px 12px;
+  text-align: right;
+  border: 1px solid var(--table-border);
+}
+
+.rates-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+  background-color: var(--table-header-bg);
+}
+
+/* 通用功能組件 */
+.tabs {
+  margin: 20px 0;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  background: var(--card-bg);
+  cursor: pointer;
+  color: var(--text-primary);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.tabs button.active {
+  background: var(--text-accent);
+  color: white;
+}
+
+.tabs button:hover:not(.active) {
+  background: var(--hover-bg);
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.sortable:hover {
+  background-color: var(--table-hover);
+}
+
+.sortable::after {
+  margin-left: 5px;
+  opacity: 0.5;
+}
+
+/* 加載/錯誤狀態 */
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.2em;
+  color: var(--text-primary);
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+}
+
+/* 錯誤邊界樣式 */
+.error-boundary {
+  padding: 20px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--error-color);
+  border-radius: 8px;
+  margin: 20px auto;
+  max-width: 800px;
+  box-shadow: var(--card-shadow);
+}
+
+.error-boundary h2 {
+  color: var(--error-color);
+  margin-top: 0;
+}
+
+.error-boundary details {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: var(--bg-highlight);
+  border-radius: 4px;
+  color: var(--text-primary);
+}

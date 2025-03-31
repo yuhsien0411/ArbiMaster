@@ -1,0 +1,128 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.homeButton {
+  background: var(--text-accent, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.homeButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.homeButton:active {
+  transform: translateY(0);
+}
+
+.pageTitle {
+  text-align: left;
+  margin-bottom: 0;
+}
+
+.filterContainer {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+.tableContainer {
+  overflow-x: auto;
+  margin-bottom: 30px;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--card-border);
+}
+
+.dataTable th, .dataTable td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.dataTable th {
+  background-color: var(--card-hover);
+  cursor: pointer;
+  user-select: none;
+}
+
+.dataTable th:hover {
+  background-color: var(--card-bg);
+}
+
+.dataTable tr:hover {
+  background-color: var(--card-hover);
+}
+
+.highlight {
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2rem;
+}
+
+.error {
+  color: #f44336;
+}
+
+.infoBox {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 30px;
+}
+
+.infoBox h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.infoBox p {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .dataTable {
+    font-size: 0.9rem;
+  }
+  
+  .dataTable th, .dataTable td {
+    padding: 8px 10px;
+  }
+} 
