@@ -2,34 +2,8 @@ import axios from 'axios';
 import crypto from 'crypto';
 const GateApi = require('gate-api');
 
-// Bitget 簽名相關函數
-function getTimestamp() {
-  return Date.now().toString();
-}
 
-function sign(message, secretKey) {
-  const hmac = crypto.createHmac('sha256', secretKey);
-  hmac.update(message);
-  return hmac.digest('base64');
-}
 
-function preHash(timestamp, method, requestPath, queryString = '', body = '') {
-  return timestamp + method.toUpperCase() + requestPath + (queryString ? '?' + queryString : '') + body;
-}
-
-function parseParamsToStr(params) {
-  if (!params || Object.keys(params).length === 0) return '';
-  return Object.entries(params)
-    .map(([key, value]) => `${key}=${value}`)
-    .join('&');
-}
-
-// 使用示例
-function getBitgetSignature(timestamp, method, requestPath, params, body = '') {
-  const queryString = parseParamsToStr(params);
-  const message = preHash(timestamp, method, requestPath, queryString, body);
-  return sign(message, process.env.BITGET_API_SECRET);
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -62,7 +36,7 @@ export default async function handler(req, res) {
       .filter(item => item && item.isBorrowable && item.assetName !== 'USDT')
       .map(item => item.assetName);
     
-    console.log('Binance 可借貸資產:', allAssets);
+    // console.log('Binance 可借貸資產:', allAssets);
 
     // 分批獲取利率數據（每批20個幣種）
     let binanceData = [];
@@ -100,7 +74,7 @@ export default async function handler(req, res) {
             return {
               exchange: 'Binance',
               pair: `${asset}/USDT`,
-              hourlyBorrowRate: (parseFloat(rateData.nextHourlyInterestRate) * 100).toString()
+              hourlyBorrowRate: (parseFloat(rateData.nextHourlyInterestRate) ).toString()
             };
           }
           return null;
@@ -132,64 +106,82 @@ export default async function handler(req, res) {
         }));
     }
 
+    // 添加延遲函數
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // 獲取 Bitget 數據
     console.log('開始獲取 Bitget 槓桿現貨數據...');
     let bitgetData = [];
     let borrowablePairs = []; // 在外部定義 borrowablePairs
     try {
       const currenciesResponse = await axios.get('https://api.bitget.com/api/v2/margin/currencies');
-      console.log('Bitget 支持的貨幣:', currenciesResponse.data);
       if (currenciesResponse.data.code === '00000' && Array.isArray(currenciesResponse.data.data)) {
         borrowablePairs = currenciesResponse.data.data
-          .filter(item => item.isBorrowable && item.quoteCoin === 'USDT')
+          .filter(item => item.isCrossBorrowable)
           .map(item => item.symbol);
       } else {
         console.error('Bitget API 返回數據格式錯誤:', currenciesResponse.data);
-        // 使用預設交易對作為備用
         borrowablePairs = ['BTCUSDT', 'ETHUSDT'];
       }
       console.log('Bitget 可借貸交易對:', borrowablePairs);
 
       // 獲取每個交易對的利率數據
       for (const symbol of borrowablePairs) {
-        // console.log('開始獲取 Bitget 利率數據...', symbol);
-        try{
-          const url = 'https://api.bitget.com/api/v2/margin/isolated/interest-rate-and-limit';
-          const timestamp = Date.now().toString();
-          
-          const message = timestamp + 'GET' + `/api/v2/margin/isolated/interest-rate-and-limit?symbol=${symbol}`;
-          const mac = crypto.createHmac('sha256', Buffer.from(process.env.BITGET_API_SECRET, 'utf8')).update(message);
-          const sign = mac.digest('base64');
-          
-          const headers = {
-            'ACCESS-KEY': process.env.BITGET_API_KEY,
-            'ACCESS-SIGN': sign,
-            'ACCESS-PASSPHRASE': process.env.BITGET_PASSPHRASE,
-            'ACCESS-TIMESTAMP': timestamp,
-            'Content-Type': 'application/json',
-            'locale': 'zh-CN'
-          }
-          const params = new URLSearchParams({ symbol });
-          const response = await axios.get(`${url}?${params}`, { headers });
-          
-          if (response.data.code === '00000' && response.data.data && response.data.data[0]) {
-            const rateData = response.data.data[0];
-            bitgetData.push({
-              exchange: 'Bitget',
-              pair: `${rateData.baseCoin}/USDT`,
-              hourlyBorrowRate: (parseFloat(rateData.baseDailyInterestRate) / 24 * 100).toString(),
-              maxLeverage: rateData.leverage,
-              dailyInterestRate: rateData.baseDailyInterestRate,
-              annuallyInterestRate: rateData.baseAnnuallyInterestRate,
-              maxBorrowableAmount: rateData.baseMaxBorrowableAmount
-            });
-          }
-          
-        }catch(error){
-          console.error('獲取 Bitget 利率數據失敗:', error.message);
-          if (error.response?.data) {
-            console.error('錯誤詳情:', error.response.data);
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        while (retryCount < maxRetries) {
+          try {
+            const url = 'https://api.bitget.com/api/v2/margin/isolated/interest-rate-and-limit';
+            const timestamp = Date.now().toString();
+            
+            const message = timestamp + 'GET' + `/api/v2/margin/isolated/interest-rate-and-limit?symbol=${symbol}`;
+            const mac = crypto.createHmac('sha256', Buffer.from(process.env.BITGET_API_SECRET, 'utf8')).update(message);
+            const sign = mac.digest('base64');
+            
+            const headers = {
+              'ACCESS-KEY': process.env.BITGET_API_KEY,
+              'ACCESS-SIGN': sign,
+              'ACCESS-PASSPHRASE': process.env.BITGET_PASSPHRASE,
+              'ACCESS-TIMESTAMP': timestamp,
+              'Content-Type': 'application/json',
+              'locale': 'zh-CN'
+            }
+            const params = new URLSearchParams({ symbol });
+            const response = await axios.get(`${url}?${params}`, { headers });
+            
+            if (response.data.code === '00000' && response.data.data && response.data.data[0]) {
+              const rateData = response.data.data[0];
+              bitgetData.push({
+                exchange: 'Bitget',
+                pair: `${rateData.baseCoin}/USDT`,
+                hourlyBorrowRate: (parseFloat(rateData.baseDailyInterestRate) / 24 * 100).toString(),
+                maxLeverage: rateData.leverage,
+                dailyInterestRate: rateData.baseDailyInterestRate,
+                annuallyInterestRate: rateData.baseAnnuallyInterestRate,
+                maxBorrowableAmount: rateData.baseMaxBorrowableAmount
+              });
+              break; // 成功獲取數據，跳出重試循環
+            }
+          } catch (error) {
+            if (error.response?.status === 429) {
+              retryCount++;
+              if (retryCount < maxRetries) {
+                const waitTime = Math.pow(2, retryCount) * 1000; // 指數退避
+                console.log(`Bitget API 請求限制，等待 ${waitTime/1000} 秒後重試...`);
+                await delay(waitTime);
+                continue;
+              }
+            }
+            console.error(`獲取 Bitget ${symbol} 利率數據失敗:`, error.message);
+            if (error.response?.data) {
+              console.error('錯誤詳情:', error.response.data);
+            }
+            break;
           }
         }
+        // 在每個請求之間添加延遲
+        await delay(1000);
       }
       console.log('Bitget 數據獲取成功，數量:', bitgetData.length);
     
