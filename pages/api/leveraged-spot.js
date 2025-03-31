@@ -91,7 +91,7 @@ export default async function handler(req, res) {
           }
         });
         
-        console.log(`Binance 第 ${i/20 + 1} 批數據響應:`, binanceResponse.data);
+        // console.log(`Binance 第 ${i/20 + 1} 批數據響應:`, binanceResponse.data);
         
         // 修正數據處理邏輯
         const batchData = batch.map(asset => {
@@ -132,13 +132,12 @@ export default async function handler(req, res) {
         }));
     }
 
-    // 獲取 Bitget 數據
     console.log('開始獲取 Bitget 槓桿現貨數據...');
     let bitgetData = [];
     let borrowablePairs = []; // 在外部定義 borrowablePairs
     try {
       const currenciesResponse = await axios.get('https://api.bitget.com/api/v2/margin/currencies');
-      // console.log('Bitget 支持的貨幣:', currenciesResponse.data);
+      console.log('Bitget 支持的貨幣:', currenciesResponse.data);
       if (currenciesResponse.data.code === '00000' && Array.isArray(currenciesResponse.data.data)) {
         borrowablePairs = currenciesResponse.data.data
           .filter(item => item.isBorrowable && item.quoteCoin === 'USDT')
@@ -148,7 +147,7 @@ export default async function handler(req, res) {
         // 使用預設交易對作為備用
         borrowablePairs = ['BTCUSDT', 'ETHUSDT'];
       }
-      // console.log('Bitget 可借貸交易對:', borrowablePairs);
+      console.log('Bitget 可借貸交易對:', borrowablePairs);
 
       // 獲取每個交易對的利率數據
       for (const symbol of borrowablePairs) {
