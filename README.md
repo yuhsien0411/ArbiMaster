@@ -9,37 +9,6 @@
 
 ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多個交易所的資金費率、資金流向、持倉量等數據的即時比較和分析。
 
-## 更新日誌
-
-### v1.4.0
-- 優化槓桿現貨API數據獲取
-  - 改進Binance數據獲取邏輯
-  - 完善Bitget錯誤處理
-  - 優化日誌輸出系統
-- 提升系統穩定性
-- 改進錯誤處理機制
-
-### v1.3.0
-- 新增槓桿現貨功能，提供各大交易所槓桿現貨交易數據比較
-- 支持按照交易所篩選槓桿現貨資訊
-- 優化用戶界面和數據展示
-
-### v1.2.0
-- 為所有數據頁面添加返回主頁按鈕
-- 在未平倉合約頁面添加搜尋功能，方便用戶快速找到特定幣種
-- 優化頁面響應式設計，提升移動端使用體驗
-
-### v1.1.0
-- 優化 CSS 結構，將樣式分離到獨立模塊
-- 改進主題切換功能
-- 新增資金費率標準化顯示
-- 優化移動端適配
-
-### v1.0.0
-- 初始版本發布
-- 實現基本功能框架
-- 支援多交易所數據整合
-
 ## 功能特點
 
 ### 1. 資金費率比較
@@ -185,9 +154,7 @@ npm start
 
 ## 聯繫方式
 
-- 作者：Yu Hsien
-- 郵箱：yuhsien0411@gmail.com
-- 網站：[your-website.com]
+- 作者：Yu Hsien ,Jerry
 
 ## 使用指南
 
@@ -364,6 +331,11 @@ MIT License
 ```
 BINANCE_API_KEY=your_binance_api_key
 BINANCE_API_SECRET=your_binance_api_secret
+
+BITGET_API_KEY=your_bitget_api_key
+BITGET_API_SECRET=your_bitget_api_secret
+BITGET_PASSPHRASE = your_bitget_passphrase
+
 GATEIO_API_KEY=your_gateio_api_key
 GATEIO_API_SECRET=your_gateio_api_secret
 ```

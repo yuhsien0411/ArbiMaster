@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     // 使用 API Key 獲取 Binance 資產信息
-    console.log('開始獲取 Binance 資產信息...');
+    console.log('開始獲取 Binance 全部資產信息...');
     const timestamp = Date.now();
     const queryString = 'timestamp=' + timestamp;
     const signature = crypto
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
         }).filter(item => item !== null);
 
         binanceData = [...binanceData, ...batchData];
-        console.log(`Binance 第 ${i/20 + 1} 批數據處理完成，當前總數據量:`, binanceData.length);
+        // console.log(`Binance 第 ${i/20 + 1} 批數據處理完成，當前總數據量:`, binanceData.length);
       } catch (batchError) {
         console.error(`Binance 第 ${i/20 + 1} 批數據獲取失敗:`, batchError.message);
         if (batchError.response?.data) {
@@ -128,7 +128,7 @@ export default async function handler(req, res) {
       for (const symbol of borrowablePairs) {
         // console.log('開始獲取 Bitget 利率數據...', symbol);
         try{
-      
+          await new Promise(resolve => setTimeout(resolve, 100)); // 新增0.1s 延遲
           const url = 'https://api.bitget.com/api/v2/margin/isolated/interest-rate-and-limit';
           const timestamp = Date.now().toString();
           
