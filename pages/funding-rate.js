@@ -251,7 +251,7 @@ export default function FundingRate() {
 
   // 添加導航到歷史頁面的函數
   const navigateToHistory = (symbol) => {
-    router.push(`/history/${symbol}`);
+    window.open(`/history/${symbol}`, '_blank');
   };
 
   // 等待客戶端渲染
