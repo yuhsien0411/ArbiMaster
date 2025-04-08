@@ -39,3 +39,5 @@ next-env.d.ts
 
 # cursor
 .cursor/rules
+test.js
+test.py
