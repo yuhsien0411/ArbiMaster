@@ -34,11 +34,8 @@ export default function Home() {
   return (
     <div className={styles.appContainer}>
       <Head>
-        <title>ArbiMaster - 加密貨幣數據中心</title>
-        <meta name="description" content="專業的加密貨幣市場數據分析平台 - 提供資金費率、未平倉合約等即時數據" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+        <title>ArbiMaster</title>
+        <meta name="description" content="加密貨幣套利分析工具" />
       </Head>
 
       <nav className={styles.navbar}>
