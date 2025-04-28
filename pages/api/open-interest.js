@@ -9,7 +9,7 @@ let isUpdating = false;
 let cachedPrices = {};  // 緩存價格數據
 
 // 預設的九個交易對
-const DEFAULT_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'SOLUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT', 'ADAUSDT'];
+const DEFAULT_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'SOLUSDT', 'DOGEUSDT', 'SUIUSDT', 'LINKUSDT', 'ADAUSDT', 'TRXUSDT'];
 
 // 配置各交易所的 API URL
 const EXCHANGE_APIS = {
@@ -27,13 +27,14 @@ const EXCHANGE_APIS = {
     priceUrl: 'https://api.bybit.com/v5/market/tickers',
     exchangeInfoUrl: 'https://api.bybit.com/v5/market/instruments-info?category=linear'
   },
-  bitget: {
-    url: 'https://api.bitget.com/api/mix/v1/market/open-interest',
-    symbolParam: 'symbol',
-    productType: 'USDT-FUTURES',
-    priceUrl: 'https://api.bitget.com/api/mix/v1/market/ticker',
-    exchangeInfoUrl: 'https://api.bitget.com/api/mix/v1/market/contracts?productType=USDT-FUTURES'
+  okx: {
+    url: 'https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-history',
+    symbolParam: 'instId',
+    period: '5m',
+    priceUrl: 'https://www.okx.com/api/v5/market/ticker',
+    exchangeInfoUrl: 'https://www.okx.com/api/v5/public/instruments?instType=SWAP'
   }
+
 };
 
 // 網頁API處理函數
@@ -58,14 +59,16 @@ export default async function handler(req, res) {
       // 獲取所有交易所的交易對
       const binanceSymbols = await fetchExchangeSymbols('binance');
       const bybitSymbols = await fetchExchangeSymbols('bybit');
-      const bitgetSymbols = await fetchExchangeSymbols('bitget');
+      const okxSymbols = await fetchExchangeSymbols('okx');
+   
 
       // 過濾符合搜尋條件的交易對（排除預設的九個）
       const searchUpperCase = search.toUpperCase();
       const filteredSymbols = {
         binance: binanceSymbols.filter(s => s.includes(searchUpperCase) && !DEFAULT_SYMBOLS.includes(s)),
         bybit: bybitSymbols.filter(s => s.includes(searchUpperCase) && !DEFAULT_SYMBOLS.includes(s)),
-        bitget: bitgetSymbols.filter(s => s.includes(searchUpperCase) && !DEFAULT_SYMBOLS.includes(s))
+        okx: okxSymbols.filter(s => s.includes(searchUpperCase) && !DEFAULT_SYMBOLS.includes(s.replace('-USDT-SWAP', 'USDT'))),
+        
       };
 
       // 獲取搜尋結果的數據
@@ -128,7 +131,7 @@ export default async function handler(req, res) {
 // 配置 WebSocket 服務器
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: true,
   },
 };
 
@@ -137,37 +140,33 @@ let io;
 if (global.io) {
   io = global.io;
 } else {
-  io = new Server({
-    path: '/api/socketio',
-  });
-  global.io = io;
+  // 直接使用全局 Socket.io 實例，不在這裡創建
+  // 改為通過 /api/socketio 端點進行初始化
+  global.io = null;
   
-  // 設置定時任務，每分鐘更新一次數據
-  setInterval(async () => {
-    try {
-      if (!isUpdating) {
-        isUpdating = true;
-        
-        // 先獲取價格數據
-        await fetchAllPrices();
-        
-        const openInterestData = await fetchAllExchangeData();
-        cachedData = openInterestData;
-        lastUpdated = new Date();
+  // 啟動一個定時任務來更新緩存數據
+  if (!global.updateInterval) {
+    global.updateInterval = setInterval(async () => {
+      try {
+        if (!isUpdating) {
+          isUpdating = true;
+          console.log('後台更新緩存數據...');
+          
+          // 先獲取價格數據
+          await fetchAllPrices();
+          
+          const openInterestData = await fetchAllExchangeData();
+          cachedData = openInterestData;
+          lastUpdated = new Date();
+          isUpdating = false;
+          console.log('後台數據更新完成');
+        }
+      } catch (error) {
+        console.error('更新未平倉合約數據時出錯:', error);
         isUpdating = false;
-        
-        // 廣播更新的數據
-        io.emit('open-interest-update', {
-          data: cachedData,
-          lastUpdated: lastUpdated.toISOString(),
-          counts: countExchangeData(cachedData)
-        });
       }
-    } catch (error) {
-      console.error('WebSocket 更新未平倉合約數據時出錯:', error);
-      isUpdating = false;
-    }
-  }, 60000); // 每分鐘更新一次
+    }, 60000); // 每分鐘更新一次
+  }
 }
 
 // 獲取所有交易所的價格數據
@@ -179,14 +178,17 @@ async function fetchAllPrices() {
     // 獲取 Bybit 價格
     const bybitPrices = await fetchBybitPrices();
     
-    // 獲取 Bitget 價格
-    const bitgetPrices = await fetchBitgetPrices();
+    // 獲取 OKX 價格
+    const okxPrices = await fetchOKXPrices();
+    // console.log(okxPrices)
+ 
     
     // 合併所有價格數據
     cachedPrices = {
       ...binancePrices,
       ...bybitPrices,
-      ...bitgetPrices
+      ...okxPrices,
+   
     };
     
     return cachedPrices;
@@ -250,30 +252,58 @@ async function fetchBybitPrices() {
   }
 }
 
-// 獲取 Bitget 價格
-async function fetchBitgetPrices() {
+// 獲取 OKX 價格
+async function fetchOKXPrices() {
   try {
-    const { priceUrl, symbols, productType } = EXCHANGE_APIS.bitget;
+    const { priceUrl } = EXCHANGE_APIS.okx;
     const prices = {};
     
-    for (const symbol of symbols) {
-      const response = await fetch(`${priceUrl}?symbol=${symbol}&productType=${productType}`);
+    // 由於 OKX API 需要指定交易對，我們需要先獲取可用的交易對
+    const okxSymbols = await fetchExchangeSymbols('okx');
+    
+    // 只獲取預設幣種的價格數據以避免過多請求
+    const defaultCoins = DEFAULT_SYMBOLS.map(symbol => symbol.replace('USDT', ''));
+    const filteredSymbols = okxSymbols.filter(symbol => 
+      defaultCoins.some(coin => symbol.includes(`${coin}-USDT`))
+    );
+    
+    // 添加延遲函數以避免請求限制
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    // 一次只請求一個交易對以避免超出限制
+    for (const instId of filteredSymbols) {
+      try {
+        const response = await fetch(`${priceUrl}?instId=${instId}`);
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data) {
-          const displaySymbol = symbol.replace('_UMCBL', '');
-          prices[displaySymbol] = parseFloat(data.data.last);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.code === '0' && Array.isArray(data.data)) {
+            data.data.forEach(item => {
+              if (item.instId) {
+                // 提取幣種名稱，例如：BTC-USDT-SWAP => BTCUSDT
+                const symbol = item.instId.replace('-USDT-SWAP', 'USDT');
+                prices[symbol] = parseFloat(item.last);
+              }
+            });
+          }
         }
+        
+        // 添加 200ms 延遲以避免觸發 OKX API 限制
+        await delay(200);
+      } catch (error) {
+        console.error(`獲取 OKX ${instId} 價格時出錯:`, error);
+        continue;
       }
     }
     
     return prices;
   } catch (error) {
-    console.error('獲取 Bitget 價格數據時出錯:', error);
+    console.error('獲取 OKX 價格數據時出錯:', error);
     return {};
   }
 }
+
+
 
 // 獲取交易所所有可用的交易對
 async function fetchExchangeSymbols(exchange) {
@@ -299,10 +329,14 @@ async function fetchExchangeSymbols(exchange) {
           .filter(symbol => symbol.status === 'Trading')
           .map(symbol => symbol.symbol);
       
-      case 'bitget':
-        return data.data
-          .filter(symbol => symbol.symbolStatus === 'normal')
-          .map(symbol => symbol.symbol);
+      case 'okx':
+        if (data.code === '0' && Array.isArray(data.data)) {
+          return data.data
+            .filter(item => item.state === 'live' && item.instType === 'SWAP' && item.settleCcy === 'USDT')
+            .map(item => item.instId);
+        }
+        return [];
+      
       
       default:
         return [];
@@ -319,25 +353,26 @@ async function fetchAllExchangeData() {
     // 獲取所有交易所的交易對
     const binanceSymbols = await fetchExchangeSymbols('binance');
     const bybitSymbols = await fetchExchangeSymbols('bybit');
-    const bitgetSymbols = await fetchExchangeSymbols('bitget');
+    const okxSymbols = await fetchExchangeSymbols('okx');
+
 
     // 更新 EXCHANGE_APIS 中的 symbols
     EXCHANGE_APIS.binance.symbols = binanceSymbols;
     EXCHANGE_APIS.bybit.symbols = bybitSymbols;
-    EXCHANGE_APIS.bitget.symbols = bitgetSymbols;
+    EXCHANGE_APIS.okx.symbols = okxSymbols;
 
     // 獲取各交易所的未平倉數據
-    const [binanceData, bybitData, bitgetData] = await Promise.all([
+    const [binanceData, bybitData, okxData] = await Promise.all([
       fetchBinanceOpenInterest(),
       fetchBybitOpenInterest(),
-      fetchBitgetOpenInterest()
+      fetchOKXOpenInterest(),
     ]);
 
     // 合併數據
     const mergedData = mergeExchangeData([
       { exchange: 'Binance', data: binanceData },
       { exchange: 'Bybit', data: bybitData },
-      { exchange: 'Bitget', data: bitgetData }
+      { exchange: 'OKX', data: okxData },
     ]);
 
     return mergedData;
@@ -398,42 +433,73 @@ async function fetchBybitOpenInterest() {
   }
 }
 
-// 獲取 Bitget 未平倉合約數據
-async function fetchBitgetOpenInterest() {
+// 獲取 OKX 未平倉合約數據
+async function fetchOKXOpenInterest() {
   try {
     const results = [];
-    const { symbols, url, symbolParam, productType } = EXCHANGE_APIS.bitget;
+    const { url, symbolParam, period } = EXCHANGE_APIS.okx;
     
-    for (const symbol of symbols) {
-      const apiUrl = `${url}?${symbolParam}=${symbol}&productType=${productType}`;
-      const response = await fetch(apiUrl);
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data) {
-          // 從原始符號中移除_UMCBL後綴以統一顯示格式
-          const displaySymbol = symbol.replace('_UMCBL', '');
-          results.push({
-            symbol: displaySymbol,
-            amount: data.data.amount
-          });
+    // 從 DEFAULT_SYMBOLS 提取幣種
+    const defaultCoins = DEFAULT_SYMBOLS.map(symbol => symbol.replace('USDT', ''));
+    
+    // 添加延遲函數以避免請求限制
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // 為每個幣種獲取未平倉合約數據
+    for (const coin of defaultCoins) {
+      const instId = `${coin}-USDT-SWAP`; // 格式化為 OKX 所需的產品 ID 格式
+      const apiUrl = `${url}?${symbolParam}=${instId}&period=${period}&limit=1`;
+
+      try {
+        const response = await fetch(apiUrl);
+          
+        if (response.ok) {
+          const data = await response.json();
+        
+          if (data.code === '0' && Array.isArray(data.data) && data.data.length > 0) {
+            // console.log(data.data);
+            const latestData = data.data[0];
+            
+            // 使用 oi 值（索引為 1）
+            if (latestData && latestData.length > 2) {
+              const oiValue = parseFloat(latestData[2]);
+              
+              if (!isNaN(oiValue) && isFinite(oiValue) && oiValue > 0) {
+                results.push({
+                  symbol: `${coin}USDT`,
+                  openInterest: oiValue
+                });
+                // console.log(`OKX ${instId}: 使用 oi 值=${oiValue}`);
+              } else {
+                console.error(`OKX ${instId}: oi 值無效: ${latestData[1]}`);
+              }
+            }
+          }
         }
+        
+        // 添加延遲以避免觸發 OKX API 限制
+        await delay(500);
+        
+      } catch (error) {
+        console.error(`獲取 OKX ${instId} 數據時出錯:`, error);
       }
     }
     
     return results;
   } catch (error) {
-    console.error('獲取 Bitget 未平倉合約數據時出錯:', error);
+    console.error('獲取 OKX 未平倉合約數據時出錯:', error);
     return [];
   }
 }
+
+
 
 // 計算各交易所數據數量
 function countExchangeData(data) {
   const counts = {
     binance: 0,
     bybit: 0,
-    bitget: 0,
+    okx: 0,
     total: 0
   };
   
@@ -446,14 +512,14 @@ function countExchangeData(data) {
           counts.binance++;
         } else if (exchange.exchange === 'Bybit') {
           counts.bybit++;
-        } else if (exchange.exchange === 'Bitget') {
-          counts.bitget++;
+        } else if (exchange.exchange === 'OKX') {
+          counts.okx++;
         }
       }
     }
   }
   
-  counts.total = counts.binance + counts.bybit + counts.bitget;
+  counts.total = counts.binance + counts.bybit + counts.okx;
   return counts;
 }
 
@@ -465,7 +531,28 @@ function mergeExchangeData(exchangesData) {
     for (const item of data) {
       const symbol = item.symbol;
       const price = cachedPrices[symbol] || 0;
-      const amount = parseFloat(item.openInterest || item.amount);
+      let amount = 0;
+      
+      try {
+        // 安全地解析 amount 值
+        amount = parseFloat(item.openInterest || item.amount || 0);
+        
+        // 檢查數值是否合理 (防止極大值)
+        if (isNaN(amount) || !isFinite(amount) || amount < 0) {
+          console.error(`${exchange} ${symbol}: 持倉量值不合理 ${amount}，設為 0`);
+          amount = 0;
+        }
+        
+        // 對於 OKX，額外檢查是否是巨大的數值
+        if (exchange === 'OKX' && amount > 1e13) {
+          console.error(`OKX ${symbol}: 持倉量值異常大 ${amount}，可能有單位問題，嘗試修正`);
+          amount = amount / 1e6; // 嘗試修正可能的單位問題
+        }
+      } catch (e) {
+        console.error(`${exchange} ${symbol}: 解析持倉量失敗 - ${e.message}`);
+        amount = 0;
+      }
+      
       const notionalValue = amount * price;
       
       if (!allData[symbol]) {
@@ -495,16 +582,16 @@ function mergeExchangeData(exchangesData) {
 // 獲取預設九個交易對的數據
 async function fetchDefaultData() {
   try {
-    const [binanceData, bybitData, bitgetData] = await Promise.all([
+    const [binanceData, bybitData, okxData] = await Promise.all([
       fetchExchangeData('binance', DEFAULT_SYMBOLS),
       fetchExchangeData('bybit', DEFAULT_SYMBOLS),
-      fetchExchangeData('bitget', DEFAULT_SYMBOLS.map(s => s + '_UMCBL'))
+      fetchOKXOpenInterest(),
     ]);
 
     return mergeExchangeData([
       { exchange: 'Binance', data: binanceData },
       { exchange: 'Bybit', data: bybitData },
-      { exchange: 'Bitget', data: bitgetData }
+      { exchange: 'OKX', data: okxData },
     ]);
   } catch (error) {
     console.error('獲取預設數據時出錯:', error);
@@ -512,23 +599,77 @@ async function fetchDefaultData() {
   }
 }
 
-// 獲取搜尋結果的數據
-async function fetchSearchData(filteredSymbols) {
-  try {
-    const [binanceData, bybitData, bitgetData] = await Promise.all([
-      fetchExchangeData('binance', filteredSymbols.binance),
-      fetchExchangeData('bybit', filteredSymbols.bybit),
-      fetchExchangeData('bitget', filteredSymbols.bitget.map(s => s + '_UMCBL'))
-    ]);
 
-    return mergeExchangeData([
+// 獲取搜索結果的數據
+async function fetchSearchData(symbol) {
+  try {
+    const coin = symbol.replace('USDT', '');
+    
+    // 從不同交易所獲取數據
+    const [binanceData, bybitData, okxData] = await Promise.all([
+      fetchExchangeData('binance', [symbol]),
+      fetchExchangeData('bybit', [symbol]),
+      fetchOKXSearchData([coin])
+    ]);
+    
+    // 合併數據
+    const mergedData = mergeExchangeData([
       { exchange: 'Binance', data: binanceData },
       { exchange: 'Bybit', data: bybitData },
-      { exchange: 'Bitget', data: bitgetData }
+      { exchange: 'OKX', data: okxData }
     ]);
+    
+    return mergedData;
   } catch (error) {
-    console.error('獲取搜尋數據時出錯:', error);
-    throw error;
+    console.error('獲取搜索數據時出錯:', error);
+    return [];
+  }
+}
+
+// 專門為 OKX 獲取搜尋交易對的數據
+async function fetchOKXSearchData(coins) {
+  try {
+    const results = [];
+    const { url, symbolParam, period } = EXCHANGE_APIS.okx;
+    
+    // 添加延遲函數以避免請求限制
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    for (const coin of coins) {
+      const instId = `${coin}-USDT-SWAP`; // 格式化為 OKX 所需的產品 ID 格式
+      const apiUrl = `${url}?${symbolParam}=${instId}&period=${period}`;
+      const response = await fetch(apiUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.code === '0' && Array.isArray(data.data) && data.data.length > 0) {
+          const latestData = data.data[0];
+          
+          // 使用 oi 值（索引為 1）
+          if (latestData && latestData.length > 1) {
+            const oiValue = parseFloat(latestData[1]);
+            
+            if (!isNaN(oiValue) && isFinite(oiValue) && oiValue > 0) {
+              results.push({
+                symbol: `${coin}USDT`,
+                openInterest: oiValue
+              });
+              console.log(`OKX ${instId}: 使用 oi 值=${oiValue}`);
+            } else {
+              console.error(`OKX ${instId}: oi 值無效: ${latestData[1]}`);
+            }
+          }
+        }
+      }
+      
+      // 添加延遲以避免觸發 OKX API 限制
+      await delay(500);
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('獲取 OKX 搜尋數據時出錯:', error);
+    return [];
   }
 }
 
@@ -536,13 +677,26 @@ async function fetchSearchData(filteredSymbols) {
 async function fetchExchangeData(exchange, symbols) {
   const { url, symbolParam, category, intervalTime, productType } = EXCHANGE_APIS[exchange];
   const results = [];
+  
+  // 添加延遲函數用於 OKX API
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   for (const symbol of symbols) {
     try {
       let apiUrl = `${url}?${symbolParam}=${symbol}`;
-      if (category) apiUrl += `&category=${category}`;
-      if (intervalTime) apiUrl += `&intervalTime=${intervalTime}`;
-      if (productType) apiUrl += `&productType=${productType}`;
+      
+      // 特殊處理 OKX 的 API 格式
+      if (exchange === 'okx') {
+        // 從 symbol 提取幣種，例如 'BTCUSDT' 轉換為 'BTC-USDT-SWAP'
+        const coin = symbol.replace('USDT', '');
+        const instId = `${coin}-USDT-SWAP`;
+        apiUrl = `${url}?${symbolParam}=${instId}`;
+        if (EXCHANGE_APIS.okx.period) apiUrl += `&period=${EXCHANGE_APIS.okx.period}`;
+      } else {
+        if (category) apiUrl += `&category=${category}`;
+        if (intervalTime) apiUrl += `&intervalTime=${intervalTime}`;
+        if (productType) apiUrl += `&productType=${productType}`;
+      }
 
       const response = await fetch(apiUrl);
       
@@ -561,13 +715,26 @@ async function fetchExchangeData(exchange, symbols) {
               });
             }
             break;
-          case 'bitget':
-            if (data.data) {
-              results.push({
-                symbol: symbol.replace('_UMCBL', ''),
-                amount: data.data.amount
-              });
+          case 'okx':
+            if (data.code === '0' && Array.isArray(data.data) && data.data.length > 0) {
+              const latestData = data.data[0];
+              
+              // 使用 oi 值（索引為 1）
+              if (latestData && latestData.length > 1) {
+                const oiValue = parseFloat(latestData[1]);
+                
+                if (!isNaN(oiValue) && isFinite(oiValue) && oiValue > 0) {
+                  results.push({
+                    symbol,
+                    openInterest: oiValue
+                  });
+                  console.log(`OKX ${symbol}: 使用 oi 值=${oiValue}`);
+                }
+              }
             }
+            
+            // 為 OKX API 添加延遲
+            await delay(500);
             break;
         }
       }
@@ -577,4 +744,4 @@ async function fetchExchangeData(exchange, symbols) {
   }
   
   return results;
-} 
+}
