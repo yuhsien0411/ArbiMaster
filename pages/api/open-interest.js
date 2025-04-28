@@ -412,7 +412,7 @@ async function fetchBybitOpenInterest() {
     const { symbols, url, symbolParam, category, intervalTime } = EXCHANGE_APIS.bybit;
     
     for (const symbol of symbols) {
-      const apiUrl = `${url}?${symbolParam}=${symbol}&category=${category}&intervalTime=${intervalTime}`;
+      const apiUrl = `${url}?${symbolParam}=${symbol}&category=${category}&intervalTime=${intervalTime}&limit=1`;
       const response = await fetch(apiUrl);
       
       if (response.ok) {

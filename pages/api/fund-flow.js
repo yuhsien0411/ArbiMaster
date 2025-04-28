@@ -3,147 +3,240 @@ import axios from 'axios';
 
 const BINANCE_API = 'https://api.binance.com/api/v3';
 const BYBIT_API = 'https://api.bybit.com/v5';
-const OKEX_API = 'https://www.okx.com/api/v5';
+const OKX_API = 'https://www.okx.com/api/v5';
 
-// 設定大額交易閾值（USDT）
-const LARGE_ORDER_THRESHOLD = 100000;
+// 配置參數
+const LARGE_ORDER_THRESHOLD = 100000; // 大額交易閾值（USDT）
+const REQUEST_TIMEOUT = 10000; // 請求超時時間
+const TIME_WINDOW = 5 * 60 * 1000; // 5分鐘時間窗口
+const TRADES_LIMIT = 1000; // 獲取交易數量限制
+
+// 緩存機制
+let cache = {
+  binance: { data: null, timestamp: 0 },
+  bybit: { data: null, timestamp: 0 },
+  okx: { data: null, timestamp: 0 }
+};
+
+// 添加重試機制
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await axios({
+        ...options,
+        url,
+        timeout: REQUEST_TIMEOUT,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+      return response.data;
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+  }
+}
 
 async function fetchBinanceData() {
   try {
-    // 獲取最近的交易數據
-    const trades = await axios.get(`${BINANCE_API}/aggTrades`, {
+    const trades = await fetchWithRetry(`${BINANCE_API}/trades`, {
       params: {
-        limit: 1000, // 獲取最近1000筆交易
-        symbol: 'BTCUSDT' // 以 BTC/USDT 為主要指標
+        symbol: 'BTCUSDT',
+        limit: TRADES_LIMIT
       }
     });
     
-    // 獲取24小時價格統計
-    const ticker = await axios.get(`${BINANCE_API}/ticker/24hr`, {
+    const ticker = await fetchWithRetry(`${BINANCE_API}/ticker/24hr`, {
       params: { symbol: 'BTCUSDT' }
     });
 
-    return {
-      trades: trades.data,
-      ticker: ticker.data
-    };
+    return { trades, ticker, timestamp: Date.now() };
   } catch (error) {
-    console.error('Binance API error:', error);
+    console.error('Binance API error:', error.message);
     return null;
   }
 }
 
 async function fetchBybitData() {
   try {
-    // 獲取最近的交易數據
-    const trades = await axios.get(`${BYBIT_API}/market/recent-trade`, {
+    // 使用 execution 端點替代 recent-trade
+    const trades = await fetchWithRetry(`${BYBIT_API}/market/recent-trade`, {
       params: {
         category: 'spot',
         symbol: 'BTCUSDT',
-        limit: 1000
+        limit: TRADES_LIMIT
       }
     });
     
-    // 獲取24小時價格統計
-    const ticker = await axios.get(`${BYBIT_API}/market/tickers`, {
+    const ticker = await fetchWithRetry(`${BYBIT_API}/market/tickers`, {
       params: {
         category: 'spot',
         symbol: 'BTCUSDT'
       }
     });
 
-    return {
-      trades: trades.data,
-      ticker: ticker.data
-    };
+    // 添加數據檢查和日誌
+    if (!trades?.result?.list || !Array.isArray(trades.result.list)) {
+      console.error('Bybit trades data format error:', trades);
+      return null;
+    }
+
+    if (!ticker?.result?.list?.[0]) {
+      console.error('Bybit ticker data format error:', ticker);
+      return null;
+    }
+
+    return { trades, ticker, timestamp: Date.now() };
   } catch (error) {
-    console.error('Bybit API error:', error);
+    console.error('Bybit API error:', error.message);
     return null;
   }
 }
 
-async function fetchOKEXData() {
+async function fetchOKXData() {
   try {
-    // 獲取最近的交易數據
-    const trades = await axios.get(`${OKEX_API}/market/trades`, {
+    const trades = await fetchWithRetry(`${OKX_API}/market/trades`, {
       params: {
         instId: 'BTC-USDT',
-        limit: 1000
+        limit: TRADES_LIMIT
       }
     });
     
-    // 獲取24小時價格統計
-    const ticker = await axios.get(`${OKEX_API}/market/ticker`, {
+    const ticker = await fetchWithRetry(`${OKX_API}/market/ticker`, {
       params: {
         instId: 'BTC-USDT'
       }
     });
 
-    return {
-      trades: trades.data,
-      ticker: ticker.data
-    };
+    return { trades, ticker, timestamp: Date.now() };
   } catch (error) {
-    console.error('OKEX API error:', error);
+    console.error('OKX API error:', error.message);
     return null;
   }
 }
 
-function calculateNetFlow(data, exchange) {
+function calculateNetFlow(data, exchange, previousData = null) {
   if (!data || !data.trades) return { netFlow: 0, largeOrdersCount: 0 };
   
   let netFlow = 0;
   let largeOrdersCount = 0;
+  let volume24h = 0;
+  const currentTime = Date.now();
 
-  switch (exchange) {
-    case 'binance':
-      data.trades.forEach(trade => {
-        const amount = parseFloat(trade.price) * parseFloat(trade.quantity);
-        if (amount >= LARGE_ORDER_THRESHOLD) {
-          largeOrdersCount++;
+  try {
+    switch (exchange) {
+      case 'binance':
+        // 過濾最近5分鐘的交易
+        const binanceTrades = data.trades.filter(trade => 
+          currentTime - trade.time <= TIME_WINDOW
+        );
+        
+        binanceTrades.forEach(trade => {
+          const price = parseFloat(trade.price);
+          const quantity = parseFloat(trade.qty);
+          const amount = price * quantity;
+          
+          if (amount >= LARGE_ORDER_THRESHOLD) {
+            largeOrdersCount++;
+          }
+          
+          netFlow += trade.isBuyerMaker ? -amount : amount;
+        });
+        volume24h = parseFloat(data.ticker.volume) * parseFloat(data.ticker.lastPrice);
+        break;
+      
+      case 'bybit':
+        if (data.trades.result && Array.isArray(data.trades.result.list)) {
+          const bybitTrades = data.trades.result.list.filter(trade => {
+            // Bybit 的時間戳是以毫秒為單位
+            const tradeTime = parseInt(trade.time);
+            return !isNaN(tradeTime) && (currentTime - tradeTime <= TIME_WINDOW);
+          });
+          
+          bybitTrades.forEach(trade => {
+            try {
+              const price = parseFloat(trade.price);
+              const size = parseFloat(trade.size);
+              if (isNaN(price) || isNaN(size)) {
+                console.warn('Bybit invalid trade data:', trade);
+                return;
+              }
+              
+              const amount = price * size;
+              if (amount >= LARGE_ORDER_THRESHOLD) {
+                largeOrdersCount++;
+              }
+              
+              // Bybit 的買賣方向是 Buy/Sell
+              netFlow += trade.side === 'Buy' ? amount : -amount;
+            } catch (err) {
+              console.error('Bybit trade processing error:', err, trade);
+            }
+          });
         }
-        netFlow += trade.isBuyerMaker ? -amount : amount;
-      });
-      break;
-    
-    case 'bybit':
-      data.trades.result.list.forEach(trade => {
-        const amount = parseFloat(trade.price) * parseFloat(trade.size);
-        if (amount >= LARGE_ORDER_THRESHOLD) {
-          largeOrdersCount++;
+        
+        if (data.ticker.result?.list?.[0]) {
+          const tickerData = data.ticker.result.list[0];
+          // 使用 turnover24h 作為24小時成交量
+          volume24h = parseFloat(tickerData.turnover24h || 0);
+          if (isNaN(volume24h)) {
+            console.warn('Bybit invalid volume data:', tickerData);
+            volume24h = 0;
+          }
         }
-        netFlow += trade.side === 'Buy' ? amount : -amount;
-      });
-      break;
-    
-    case 'okex':
-      data.trades.data.forEach(trade => {
-        const amount = parseFloat(trade.px) * parseFloat(trade.sz);
-        if (amount >= LARGE_ORDER_THRESHOLD) {
-          largeOrdersCount++;
+        break;
+      
+      case 'okx':
+        if (data.trades.data && Array.isArray(data.trades.data)) {
+          const okxTrades = data.trades.data.filter(trade => 
+            currentTime - parseInt(trade.ts) <= TIME_WINDOW
+          );
+          
+          okxTrades.forEach(trade => {
+            const price = parseFloat(trade.px);
+            const size = parseFloat(trade.sz);
+            const amount = price * size;
+            
+            if (amount >= LARGE_ORDER_THRESHOLD) {
+              largeOrdersCount++;
+            }
+            
+            netFlow += trade.side.toLowerCase() === 'buy' ? amount : -amount;
+          });
         }
-        netFlow += trade.side === 'buy' ? amount : -amount;
-      });
-      break;
-  }
+        if (data.ticker.data && data.ticker.data[0]) {
+          volume24h = parseFloat(data.ticker.data[0].vol24h) * 
+                     parseFloat(data.ticker.data[0].last);
+        }
+        break;
+    }
 
-  return {
-    netFlow,
-    largeOrdersCount,
-    volume24h: calculateVolume24h(data.ticker, exchange)
-  };
-}
+    // 數據平滑處理
+    if (previousData) {
+      netFlow = (netFlow + previousData.netFlow) / 2;
+      largeOrdersCount = Math.round((largeOrdersCount + previousData.largeOrdersCount) / 2);
+    }
 
-function calculateVolume24h(ticker, exchange) {
-  switch (exchange) {
-    case 'binance':
-      return parseFloat(ticker.volume) * parseFloat(ticker.lastPrice);
-    case 'bybit':
-      return parseFloat(ticker.result.list[0].volume24h);
-    case 'okex':
-      return parseFloat(ticker.data[0].vol24h) * parseFloat(ticker.data[0].last);
-    default:
-      return 0;
+    // 添加數據驗證
+    if (isNaN(netFlow)) {
+      console.error(`Invalid netFlow for ${exchange}:`, netFlow);
+      netFlow = 0;
+    }
+    if (isNaN(volume24h)) {
+      console.error(`Invalid volume24h for ${exchange}:`, volume24h);
+      volume24h = 0;
+    }
+
+    return {
+      netFlow: Math.round(netFlow * 100) / 100,
+      largeOrdersCount,
+      volume24h: Math.round(volume24h * 100) / 100
+    };
+  } catch (error) {
+    console.error(`Error calculating net flow for ${exchange}:`, error);
+    return { netFlow: 0, largeOrdersCount: 0, volume24h: 0 };
   }
 }
 
@@ -153,42 +246,74 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 並行獲取所有交易所數據
-    const [binanceData, bybitData, okexData] = await Promise.all([
+    const currentTime = Date.now();
+    const [binanceData, bybitData, okxData] = await Promise.all([
       fetchBinanceData(),
       fetchBybitData(),
-      fetchOKEXData()
+      fetchOKXData()
     ]);
 
-    const timestamp = Date.now();
+    // 更新緩存
+    if (binanceData) {
+      const previousData = cache.binance.data;
+      cache.binance = { 
+        data: calculateNetFlow(binanceData, 'binance', previousData),
+        timestamp: currentTime 
+      };
+    }
+    if (bybitData) {
+      const previousData = cache.bybit.data;
+      cache.bybit = { 
+        data: calculateNetFlow(bybitData, 'bybit', previousData),
+        timestamp: currentTime 
+      };
+    }
+    if (okxData) {
+      const previousData = cache.okx.data;
+      cache.okx = { 
+        data: calculateNetFlow(okxData, 'okx', previousData),
+        timestamp: currentTime 
+      };
+    }
 
-    // 計算每個交易所的淨流入
     const result = {
-      binance: {
-        ...calculateNetFlow(binanceData, 'binance'),
-        timestamp
-      },
-      bybit: {
-        ...calculateNetFlow(bybitData, 'bybit'),
-        timestamp
-      },
-      okex: {
-        ...calculateNetFlow(okexData, 'okex'),
-        timestamp
-      }
+      binance: cache.binance.data ? {
+        ...cache.binance.data,
+        timestamp: cache.binance.timestamp
+      } : null,
+      bybit: cache.bybit.data ? {
+        ...cache.bybit.data,
+        timestamp: cache.bybit.timestamp
+      } : null,
+      okx: cache.okx.data ? {
+        ...cache.okx.data,
+        timestamp: cache.okx.timestamp
+      } : null
     };
 
-    // 添加總淨流入和統計信息
-    result.total = {
-      netFlow: Object.values(result).reduce((acc, { netFlow }) => acc + (netFlow || 0), 0),
-      largeOrdersCount: Object.values(result).reduce((acc, { largeOrdersCount }) => acc + (largeOrdersCount || 0), 0),
-      volume24h: Object.values(result).reduce((acc, { volume24h }) => acc + (volume24h || 0), 0),
-      timestamp
+    // 計算總體數據
+    const validResults = Object.values(result).filter(Boolean);
+    const total = {
+      netFlow: validResults.reduce((sum, exchange) => sum + (exchange.netFlow || 0), 0),
+      largeOrdersCount: validResults.reduce((sum, exchange) => sum + (exchange.largeOrdersCount || 0), 0),
+      volume24h: validResults.reduce((sum, exchange) => sum + (exchange.volume24h || 0), 0),
+      timestamp: currentTime
     };
 
-    res.status(200).json(result);
+    // 移除為null的交易所數據
+    const cleanResult = Object.fromEntries(
+      Object.entries(result).filter(([_, value]) => value !== null)
+    );
+
+    res.status(200).json({
+      ...cleanResult,
+      total
+    });
   } catch (error) {
     console.error('Error fetching fund flow data:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      message: 'Internal server error',
+      error: error.message 
+    });
   }
 } 

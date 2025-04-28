@@ -12,16 +12,11 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import SearchIcon from '@mui/icons-material/Search';
 import HomeIcon from '@mui/icons-material/Home';
-import { io } from 'socket.io-client';
 import { useRouter } from 'next/router';
+import BinanceOpenInterestHistoryChart from '../components/BinanceOpenInterestHistoryChart';
 
-// 預設顯示的八個幣種
-const DEFAULT_COINS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'DOT', 'LINK', 'ADA'];
-
-// 初始化 socket.io 客戶端
-const socket = io({
-  path: '/api/socketio'
-});
+// 預設顯示的九個幣種
+const DEFAULT_COINS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'DOGE', 'SUI', 'LINK', 'ADA', 'TRX'];
 
 // 定義顏色主題
 const customTheme = {
@@ -79,14 +74,15 @@ export default function OpenInterest() {
   const [counts, setCounts] = useState({
     binance: 0,
     bybit: 0,
-    bitget: 0,
+    okx: 0,
     total: 0
   });
   const [exchangeStatus, setExchangeStatus] = useState({
     binance: true,
     bybit: true,
-    bitget: true
+    okx: true
   });
+  const [selectedSymbol, setSelectedSymbol] = useState(DEFAULT_COINS[0]);
 
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
@@ -158,7 +154,7 @@ export default function OpenInterest() {
         setCounts(data.counts || {
           binance: 0,
           bybit: 0,
-          bitget: 0,
+          okx: 0,
           total: 0
         });
         // 設置交易所狀態
@@ -179,38 +175,15 @@ export default function OpenInterest() {
   useEffect(() => {
     fetchOpenInterestData();
     
-    // 設置 WebSocket 連接
-    try {
-      socket.on('connect', () => {
-        console.log('WebSocket connected');
-      });
-      
-      socket.on('open-interest-update', (data) => {
-        if (data && data.data && !isSearching) {
-          setOpenInterestData(data.data);
-          setLastUpdated(data.lastUpdated);
-          setCounts(data.counts || {
-            binance: 0,
-            bybit: 0,
-            bitget: 0,
-            total: 0
-          });
-        }
-        setLoading(false);
-      });
-      
-      socket.on('disconnect', () => {
-        console.log('WebSocket disconnected');
-      });
-      
-      socket.on('error', (error) => {
-        console.error('WebSocket error:', error);
-      });
-    } catch (err) {
-      console.error('WebSocket initialization error:', err);
-    }
+    // 創建一個輪詢任務來獲取最新數據
+    const interval = setInterval(() => {
+      fetchOpenInterestData();
+    }, 60000); // 每分鐘更新一次
     
     return () => {
+      // 清除輪詢任務
+      clearInterval(interval);
+      
       // 清除搜尋計時器
       if (searchTimeout) {
         clearTimeout(searchTimeout);
@@ -298,6 +271,11 @@ export default function OpenInterest() {
     return index % 2 === 0 ? currentTheme.tableRow.even : currentTheme.tableRow.odd;
   };
 
+  // 在表格行點擊處理函數中添加
+  const handleRowClick = (symbol) => {
+    setSelectedSymbol(symbol);
+  };
+
   return (
     <Box sx={{ bgcolor: currentTheme.background, minHeight: '100vh', pb: 4 }}>
       <Head>
@@ -372,20 +350,22 @@ export default function OpenInterest() {
               </IconButton>
             </Tooltip>
             <Tooltip title="刷新數據">
-              <IconButton
-                onClick={fetchOpenInterestData}
-                disabled={loading}
-                sx={{ 
-                  color: loading ? currentTheme.text.secondary : currentTheme.text.primary,
-                  backgroundColor: currentTheme.paper,
-                  border: darkMode ? '1px solid #30363d' : 'none',
-                  '&:hover': {
-                    backgroundColor: darkMode ? '#1c2128' : '#f0f0f0',
-                  }
-                }}
-              >
-                <RefreshIcon />
-              </IconButton>
+              <span>
+                <IconButton
+                  onClick={fetchOpenInterestData}
+                  disabled={loading}
+                  sx={{ 
+                    color: loading ? currentTheme.text.secondary : currentTheme.text.primary,
+                    backgroundColor: currentTheme.paper,
+                    border: darkMode ? '1px solid #30363d' : 'none',
+                    '&:hover': {
+                      backgroundColor: darkMode ? '#1c2128' : '#f0f0f0',
+                    }
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </span>
             </Tooltip>
           </Box>
         </Box>
@@ -523,11 +503,11 @@ export default function OpenInterest() {
                   }}
                 />
                 <Chip 
-                  label={`Bitget: ${counts.bitget || 0}`} 
+                  label={`OKX: ${counts.okx || 0}`} 
                   size="small"
                   sx={{ 
-                    backgroundColor: darkMode ? (exchangeStatus.bitget ? '#1a2e1a' : '#3d1818') : (exchangeStatus.bitget ? '#e8f5e9' : '#ffebee'),
-                    color: darkMode ? (exchangeStatus.bitget ? '#c9d1d9' : '#ff8a80') : (exchangeStatus.bitget ? '#2e7d32' : '#c62828'),
+                    backgroundColor: darkMode ? '#1a2e1a' : '#e8f5e9',
+                    color: darkMode ? '#c9d1d9' : '#1a1a1a',
                     border: darkMode ? '1px solid #30363d' : 'none'
                   }}
                 />
@@ -573,7 +553,7 @@ export default function OpenInterest() {
                   <MenuItem value="all">全部交易所</MenuItem>
                   <MenuItem value="Binance">Binance</MenuItem>
                   <MenuItem value="Bybit">Bybit</MenuItem>
-                  <MenuItem value="Bitget">Bitget</MenuItem>
+                  <MenuItem value="OKX">OKX</MenuItem>
                 </Select>
               </FormControl>
             </Card>
@@ -581,7 +561,7 @@ export default function OpenInterest() {
         </Grid>
 
         {/* 交易所狀態提示 */}
-        {(!exchangeStatus.bitget || !exchangeStatus.binance || !exchangeStatus.bybit) && (
+        {(!exchangeStatus.binance || !exchangeStatus.bybit || !exchangeStatus.okx) && (
           <Paper 
             sx={{ 
               p: 3, 
@@ -597,7 +577,6 @@ export default function OpenInterest() {
               <InfoIcon sx={{ color: 'inherit' }} />
               <Typography sx={{ lineHeight: 1.6 }}>
                 部分交易所數據暫時無法獲取：
-                {!exchangeStatus.bitget && ' Bitget'}
                 {!exchangeStatus.binance && ' Binance'}
                 {!exchangeStatus.bybit && ' Bybit'}
                 。這是暫時性的，請稍後再試。
@@ -668,12 +647,14 @@ export default function OpenInterest() {
                 filteredData.map((item, index) => (
                   <TableRow 
                     key={item.symbol || index}
+                    onClick={() => handleRowClick(item.symbol)}
                     sx={{ 
                       backgroundColor: getRowBackground(index),
                       '&:hover': { backgroundColor: currentTheme.tableRow.hover },
                       '& td': {
                         borderBottom: `1px solid ${currentTheme.divider}`
-                      }
+                      },
+                      cursor: 'pointer'
                     }}
                   >
                     <TableCell sx={{ color: currentTheme.text.primary }}>{index + 1}</TableCell>
@@ -685,26 +666,25 @@ export default function OpenInterest() {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {(item.exchangeData || []).map((exchange, idx) => (
-                          <Chip 
-                            key={`${exchange.exchange || 'unknown'}-${idx}`}
-                            size="small"
-                            label={`${exchange.exchange || '未知'}: ${formatAmount(exchange.notionalValue || 0)}`}
-                            sx={{ 
-                              backgroundColor: darkMode ? (
-                                exchange.exchange === 'Binance' ? '#1a2536' :
-                                exchange.exchange === 'Bybit' ? '#33261a' :
-                                '#1a2e1a'
-                              ) : (
-                                exchange.exchange === 'Binance' ? '#e3f2fd' :
-                                exchange.exchange === 'Bybit' ? '#fff3e0' :
-                                '#e8f5e9'
-                              ),
-                              color: darkMode ? '#c9d1d9' : '#1a1a1a',
-                              border: darkMode ? '1px solid #30363d' : 'none'
-                            }}
-                          />
-                        ))}
+                        {(item.exchangeData || [])
+                          .map((exchange, idx) => (
+                            <Chip 
+                              key={`${exchange.exchange || 'unknown'}-${idx}`}
+                              size="small"
+                              label={`${exchange.exchange || '未知'}: ${formatAmount(exchange.notionalValue || 0)}`}
+                              sx={{ 
+                                backgroundColor: darkMode ? (
+                                  exchange.exchange === 'Binance' ? '#1a2536' :
+                                  '#33261a'
+                                ) : (
+                                  exchange.exchange === 'Binance' ? '#e3f2fd' :
+                                  '#fff3e0'
+                                ),
+                                color: darkMode ? '#c9d1d9' : '#1a1a1a',
+                                border: darkMode ? '1px solid #30363d' : 'none'
+                              }}
+                            />
+                          ))}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -726,6 +706,11 @@ export default function OpenInterest() {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* 畢安合約持倉價值與價格對比圖表 */}
+        <div style={{ marginTop: '40px' }}>
+          <BinanceOpenInterestHistoryChart symbol={selectedSymbol} />
+        </div>
 
         {/* 底部備註 */}
         <Box sx={{ 

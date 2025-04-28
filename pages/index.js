@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
+import FearGreedWidget from '../components/FearGreedWidget';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
@@ -34,11 +35,8 @@ export default function Home() {
   return (
     <div className={styles.appContainer}>
       <Head>
-        <title>ArbiMaster - 加密貨幣數據中心</title>
-        <meta name="description" content="專業的加密貨幣市場數據分析平台 - 提供資金費率、未平倉合約等即時數據" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+        <title>ArbiMaster</title>
+        <meta name="description" content="加密貨幣套利分析工具" />
       </Head>
 
       <nav className={styles.navbar}>
@@ -47,7 +45,10 @@ export default function Home() {
             <span className={styles.logoIcon}>⚡️</span>
             <span>ArbiMaster</span>
           </div>
-          <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
+          <div className={styles.navRight}>
+            <FearGreedWidget />
+            <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
+          </div>
         </div>
       </nav>
 
@@ -71,6 +72,14 @@ export default function Home() {
           
           <div className={styles.featureGrid}>
             {[
+              {
+                href: '/market-heatmap',
+                icon: '🌡️',
+                iconClass: styles.heatmap,
+                stats: { label: '更新頻率', value: '實時' },
+                title: '市值熱力圖',
+                description: '直觀展示加密貨幣市場漲跌情況，快速把握市場動態'
+              },
               {
                 href: '/funding-rate',
                 icon: '💰',

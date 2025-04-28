@@ -16,7 +16,7 @@ export default function LeveragedSpot() {
   const [ratePeriod, setRatePeriod] = useState('1h');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const exchanges = ['Binance', 'Bybit', 'Bitget', 'OKX', 'Gate.io'];
+  const exchanges = ['Binance', 'Bybit', 'OKX'];
   const ratePeriods = [
     { value: '1h', label: '1小時' },
     { value: '1d', label: '1天' },

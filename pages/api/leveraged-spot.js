@@ -105,7 +105,7 @@ export default async function handler(req, res) {
           hourlyBorrowRate: item.hourlyBorrowRate
         }));
     }
-
+/*
     console.log('開始獲取 Bitget 槓桿現貨數據...');
     let bitgetData = [];
     let borrowablePairs = []; // 在外部定義 borrowablePairs
@@ -175,6 +175,7 @@ export default async function handler(req, res) {
         console.error('錯誤詳情:', error.response.data);
       }
     }
+    */
 
     // 獲取 OKX 數據
     console.log('開始獲取 OKX 利率數據...');
@@ -190,7 +191,7 @@ export default async function handler(req, res) {
         }));
       console.log('OKX 數據獲取成功，數量:', okxData.length);
     }
-
+/*
     // 獲取 Gate.io 數據
     console.log('開始獲取 Gate.io 利率數據...');
     let gateioData = [];
@@ -263,16 +264,16 @@ export default async function handler(req, res) {
         response: error.response?.data
       });
     }
-
+*/
     // 合併所有數據
-    const allData = [...binanceData, ...bybitData, ...bitgetData, ...okxData, ...gateioData];
+    const allData = [...binanceData, ...bybitData, ...okxData];
     console.log('所有數據合併完成，總數據量:', allData.length);
     console.log('各交易所數據量:', {
       binance: binanceData.length,
       bybit: bybitData.length,
-      bitget: bitgetData.length,
+      // bitget: bitgetData.length,
       okx: okxData.length,
-      gate: gateioData.length
+      // gate: gateioData.length
     });
 
     // 返回數據

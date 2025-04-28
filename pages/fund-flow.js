@@ -14,7 +14,9 @@ import {
   IconButton,
   Paper,
   Divider,
-  Button
+  Button,
+  Alert,
+  AlertTitle
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -22,6 +24,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import InfoIcon from '@mui/icons-material/Info';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HomeIcon from '@mui/icons-material/Home';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -46,6 +49,14 @@ const InfoCard = styled(Paper)(({ theme }) => ({
   '& .MuiTypography-root': {
     marginBottom: theme.spacing(1),
   },
+}));
+
+const AnalysisCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(4),
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[2],
 }));
 
 export default function FundFlow() {
@@ -91,6 +102,36 @@ export default function FundFlow() {
     return () => clearInterval(interval);
   }, []);
 
+  // 添加市場趨勢分析函數
+  const analyzeMarketTrend = (flowData) => {
+    if (!flowData) return null;
+    
+    const { total } = flowData;
+    const netFlow = total?.netFlow || 0;
+    const volume24h = total?.volume24h || 0;
+    
+    // 計算資金流向強度（資金流向佔24小時成交量的百分比）
+    const flowStrength = volume24h ? (Math.abs(netFlow) / volume24h) * 100 : 0;
+    
+    // 分析市場趨勢
+    let trend = {
+      direction: netFlow > 0 ? '淨流入' : '淨流出',
+      strength: flowStrength < 1 ? '弱' : flowStrength < 5 ? '中等' : '強',
+      signal: 'neutral'
+    };
+    
+    // 根據大額交易和資金流向判斷信號
+    if (netFlow > 0 && flowStrength > 3) {
+      trend.signal = 'bullish';
+    } else if (netFlow < 0 && flowStrength > 3) {
+      trend.signal = 'bearish';
+    }
+    
+    return trend;
+  };
+
+  const marketTrend = flowData ? analyzeMarketTrend(flowData) : null;
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
@@ -133,6 +174,55 @@ export default function FundFlow() {
             返回主頁
           </Button>
         </Box>
+
+        <AnalysisCard elevation={2}>
+          <Box display="flex" alignItems="center" mb={2}>
+            <ShowChartIcon color="primary" sx={{ mr: 2 }} />
+            <Typography variant="h6" component="h2">
+              市場趨勢分析
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              <Typography variant="body1" paragraph>
+                資金流向分析是觀察市場情緒和大戶行為的重要指標。通過監控交易所之間的資金流動，
+                我們可以更好地理解市場參與者的行為和可能的價格走勢。
+              </Typography>
+              {marketTrend && (
+                <Alert 
+                  severity={
+                    marketTrend.signal === 'bullish' ? 'success' : 
+                    marketTrend.signal === 'bearish' ? 'error' : 
+                    'info'
+                  }
+                  sx={{ mb: 2 }}
+                >
+                  <AlertTitle>當前市場趨勢</AlertTitle>
+                  市場呈現{marketTrend.direction}趨勢，強度{marketTrend.strength}
+                  {marketTrend.strength === '強' && '，建議密切關注市場變化'}
+                </Alert>
+              )}
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                    指標說明
+                  </Typography>
+                  <Typography variant="body2" paragraph>
+                    • 淨流入：表示資金正在進入市場
+                  </Typography>
+                  <Typography variant="body2" paragraph>
+                    • 淨流出：表示資金正在離開市場
+                  </Typography>
+                  <Typography variant="body2">
+                    • 大額交易：單筆超過10萬USDT的交易
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </AnalysisCard>
 
         <InfoCard elevation={0}>
           <Box display="flex" alignItems="center" mb={1}>
@@ -195,7 +285,7 @@ export default function FundFlow() {
                 <StyledCard>
                   <CardContent>
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                      <Typography variant="h6" textTransform="capitalize">
+                      <Typography variant="h6" textTransform="uppercase">
                         {exchange}
                       </Typography>
                       <Chip

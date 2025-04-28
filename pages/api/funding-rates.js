@@ -5,14 +5,33 @@ import { Server } from 'socket.io';
 const CACHE_DURATION = 60000; // 1分鐘
 let cachedData = null;
 let lastCacheTime = 0;
+let io = null;
 
-// 創建 socket.io 實例
-let io;
+// 初始化 Socket.IO
+const initSocketIO = (res) => {
+  if (!io) {
+    io = new Server(res.socket.server, {
+      path: '/api/socketio',
+      addTrailingSlash: false,
+      cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+      },
+      transports: ['websocket', 'polling']
+    });
 
-if (!global.io) {
-  global.io = new Server();
-}
-io = global.io;
+    io.on('connection', (socket) => {
+      console.log('Client connected to funding rates socket');
+      
+      socket.on('disconnect', () => {
+        console.log('Client disconnected from funding rates socket');
+      });
+    });
+
+    res.socket.server.io = io;
+  }
+  return io;
+};
 
 // 添加 fetch 超時和重試函數
 async function fetchWithTimeout(url, options = {}, timeout = 15000) {
@@ -67,14 +86,12 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
 
 // 主要的 API 處理函數
 export default async function handler(req, res) {
-  // 設置 Socket.IO
-  if (!res.socket.server.io) {
-    io.attach(res.socket.server);
-    res.socket.server.io = io;
-  }
-
-  // 如果是 WebSocket 請求
+  // 如果是 WebSocket 升級請求
   if (req.headers.upgrade === 'websocket') {
+    // 確保 Socket.IO 已初始化
+    if (!res.socket.server.io) {
+      initSocketIO(res);
+    }
     res.end();
     return;
   }
@@ -94,7 +111,7 @@ export default async function handler(req, res) {
     cachedData = data;
     lastCacheTime = currentTime;
 
-    // 通過 WebSocket 廣播新數據
+    // 如果 Socket.IO 已初始化，則廣播新數據
     if (io) {
       io.emit('funding-rates-update', data);
     }
@@ -109,8 +126,7 @@ export default async function handler(req, res) {
     res.status(500).json({ 
       success: false,
       error: '獲取資金費率失敗',
-      details: error.message,
-      data: []
+      details: error.message
     });
   }
 }
