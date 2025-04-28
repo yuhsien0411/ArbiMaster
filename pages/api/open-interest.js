@@ -268,7 +268,7 @@ async function fetchOKXPrices() {
     );
     
     // 添加延遲函數以避免請求限制
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    // const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     
     // 一次只請求一個交易對以避免超出限制
     for (const instId of filteredSymbols) {
@@ -289,7 +289,7 @@ async function fetchOKXPrices() {
         }
         
         // 添加 200ms 延遲以避免觸發 OKX API 限制
-        await delay(200);
+        // await delay(200);
       } catch (error) {
         console.error(`獲取 OKX ${instId} 價格時出錯:`, error);
         continue;
@@ -448,7 +448,7 @@ async function fetchOKXOpenInterest() {
     const defaultCoins = DEFAULT_SYMBOLS.map(symbol => symbol.replace('USDT', ''));
     
     // 添加延遲函數以避免請求限制
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    // const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     // 為每個幣種獲取未平倉合約數據
     for (const coin of defaultCoins) {
@@ -483,7 +483,7 @@ async function fetchOKXOpenInterest() {
         }
         
         // 添加延遲以避免觸發 OKX API 限制
-        await delay(500);
+        // await delay(500);
         
       } catch (error) {
         console.error(`獲取 OKX ${instId} 數據時出錯:`, error);
