@@ -321,18 +321,23 @@ async function fetchExchangeSymbols(exchange) {
     switch (exchange) {
       case 'binance':
         return data.symbols
-          .filter(symbol => symbol.status === 'TRADING' && symbol.contractType === 'PERPETUAL')
+          .filter(symbol => symbol.status === 'TRADING' && 
+                 symbol.contractType === 'PERPETUAL' &&
+                 symbol.symbol.endsWith('USDT'))
           .map(symbol => symbol.symbol);
       
       case 'bybit':
         return data.result.list
-          .filter(symbol => symbol.status === 'Trading')
+          .filter(symbol => symbol.status === 'Trading' && 
+                 symbol.symbol.endsWith('USDT'))
           .map(symbol => symbol.symbol);
       
       case 'okx':
         if (data.code === '0' && Array.isArray(data.data)) {
           return data.data
-            .filter(item => item.state === 'live' && item.instType === 'SWAP' && item.settleCcy === 'USDT')
+            .filter(item => item.state === 'live' && 
+                   item.instType === 'SWAP' && 
+                   item.settleCcy === 'USDT')
             .map(item => item.instId);
         }
         return [];
@@ -601,22 +606,33 @@ async function fetchDefaultData() {
 
 
 // 獲取搜索結果的數據
-async function fetchSearchData(symbol) {
+async function fetchSearchData(filteredSymbols) {
   try {
-    const coin = symbol.replace('USDT', '');
+    const binanceResults = await Promise.all(
+      filteredSymbols.binance.map(symbol => fetchExchangeData('binance', [symbol]))
+    );
     
-    // 從不同交易所獲取數據
-    const [binanceData, bybitData, okxData] = await Promise.all([
-      fetchExchangeData('binance', [symbol]),
-      fetchExchangeData('bybit', [symbol]),
-      fetchOKXSearchData([coin])
-    ]);
+    const bybitResults = await Promise.all(
+      filteredSymbols.bybit.map(symbol => fetchExchangeData('bybit', [symbol]))
+    );
+    
+    const okxResults = await Promise.all(
+      filteredSymbols.okx.map(symbol => {
+        const coin = symbol.replace('-USDT-SWAP', '');
+        return fetchOKXSearchData([coin]);
+      })
+    );
+    
+    // 展平結果數組
+    const flatBinanceData = binanceResults.flat();
+    const flatBybitData = bybitResults.flat();
+    const flatOkxData = okxResults.flat();
     
     // 合併數據
     const mergedData = mergeExchangeData([
-      { exchange: 'Binance', data: binanceData },
-      { exchange: 'Bybit', data: bybitData },
-      { exchange: 'OKX', data: okxData }
+      { exchange: 'Binance', data: flatBinanceData },
+      { exchange: 'Bybit', data: flatBybitData },
+      { exchange: 'OKX', data: flatOkxData }
     ]);
     
     return mergedData;

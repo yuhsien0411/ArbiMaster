@@ -76,6 +76,26 @@ const BinanceOpenInterestHistoryChart = ({ symbol }) => {
       try {
         setLoading(true);
         
+        // 處理幣對名稱
+        // 1. 去除非USDT的後綴，如果有（例如 TIAUSDC -> TIA）
+        // 2. 確保以USDT結尾
+        let symbolForRequest = symbol;
+        
+        // 檢查幣對是否以其他非USDT穩定幣結尾
+        const stablecoins = ['USDC', 'BUSD', 'TUSD', 'DAI'];
+        for (const stablecoin of stablecoins) {
+          if (symbol.endsWith(stablecoin)) {
+            // 去除非USDT穩定幣後綴
+            symbolForRequest = symbol.slice(0, -stablecoin.length);
+            break;
+          }
+        }
+        
+        // 確保以USDT結尾
+        if (!symbolForRequest.endsWith('USDT')) {
+          symbolForRequest = symbolForRequest + 'USDT';
+        }
+        
         // 計算根據時間範圍所需的數據點數
         let calculatedLimit = '100'; // 預設值
         
@@ -85,7 +105,7 @@ const BinanceOpenInterestHistoryChart = ({ symbol }) => {
         }
         
         // 獲取持倉量數據
-        const openInterestResponse = await fetch(`/api/binance-open-interest-history?symbol=${symbol}USDT&period=${period}&limit=${calculatedLimit}`);
+        const openInterestResponse = await fetch(`/api/binance-open-interest-history?symbol=${symbolForRequest}&period=${period}&limit=${calculatedLimit}`);
         
         if (!openInterestResponse.ok) {
           throw new Error(`持倉量數據API請求失敗: ${openInterestResponse.status}`);
@@ -94,7 +114,7 @@ const BinanceOpenInterestHistoryChart = ({ symbol }) => {
         const openInterestResult = await openInterestResponse.json();
 
         // 獲取價格數據
-        const priceResponse = await fetch(`/api/binance-klines?symbol=${symbol}USDT&interval=${getPriceInterval(period)}&limit=${calculatedLimit}`);
+        const priceResponse = await fetch(`/api/binance-klines?symbol=${symbolForRequest}&interval=${getPriceInterval(period)}&limit=${calculatedLimit}`);
         
         if (!priceResponse.ok) {
           throw new Error(`價格數據API請求失敗: ${priceResponse.status}`);

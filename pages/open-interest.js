@@ -142,6 +142,11 @@ export default function OpenInterest() {
   // 獲取未平倉合約數據
   const fetchOpenInterestData = async () => {
     try {
+      // 如果正在搜尋，不要刷新數據以保留搜尋結果
+      if (isSearching && searchQuery.trim()) {
+        return;
+      }
+      
       setLoading(true);
       setError(null);
       
@@ -238,6 +243,11 @@ export default function OpenInterest() {
       const symbol = item.symbol?.toUpperCase() || '';
       const searchUpperCase = searchQuery.toUpperCase();
       const isDefaultCoin = DEFAULT_COINS.includes(symbol.replace('USDT', ''));
+      
+      // 確保只顯示以USDT結尾的交易對
+      if (!symbol.endsWith('USDT')) {
+        return false;
+      }
 
       // 如果有搜尋關鍵字，只搜尋非預設幣種
       if (searchQuery) {
@@ -273,7 +283,20 @@ export default function OpenInterest() {
 
   // 在表格行點擊處理函數中添加
   const handleRowClick = (symbol) => {
-    setSelectedSymbol(symbol);
+    // 截取幣種基礎名稱，移除任何後綴（如USDT、USDC等）
+    let baseCoin = symbol;
+    
+    // 檢查並移除常見穩定幣後綴
+    const stablecoins = ['USDT', 'USDC', 'BUSD', 'TUSD', 'DAI'];
+    for (const stablecoin of stablecoins) {
+      if (symbol.endsWith(stablecoin)) {
+        baseCoin = symbol.slice(0, -stablecoin.length);
+        break;
+      }
+    }
+    
+    // 設置基礎幣種名稱，不包含後綴
+    setSelectedSymbol(baseCoin);
   };
 
   return (
