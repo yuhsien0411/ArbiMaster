@@ -17,6 +17,9 @@ ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多
 - 提供費率排序和搜尋功能
 - 可自定義顯示的交易所
 - 支持深色/淺色主題切換
+- 🔄 每30秒自動更新資金費率數據
+- 📈 查看各幣種的歷史資金費率走勢
+- 支持查看24小時、7天、30天的歷史數據
 
 ### 2. 資金流向分析
 - 監控交易所間的資金流向
@@ -37,18 +40,34 @@ ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多
 - 支持多個交易所的槓桿現貨借貸利率比較
 - 實時更新利率數據
 - 支持不同時間週期的利率顯示（1小時、1天、1年）
+- 顯示最大槓桿倍數、交易對、手續費率等重要參數
+- 清晰展示各交易所的清算閾值和最小交易額要求
 - 目前支持的交易所：
   - Binance（全倉槓桿）
   - Bybit（全倉槓桿）
   - OKX（全倉槓桿）
-  - Bitget（模擬數據）
-  - Gate.io（模擬數據）
+）
 
 ### 6. 價格比較
 - 支持多個交易所的現貨價格比較
 - 實時更新價格數據
 - 計算價格差異百分比
 - 支持多個交易對
+
+### 7. CEX 理財收益分析
+- 比較各大交易所的穩定幣活期理財收益率
+- 支援 USDT、USDC、DAI 三種主要穩定幣
+- 按幣種和收益率排序
+- 顯示最低投資金額和鎖定期信息
+- 數據每 2 分鐘自動更新
+
+## 支持的交易所
+- Binance
+- Bybit
+- OKX
+- Bitget
+- Gate.io
+- HyperLiquid
 
 ## 技術架構
 
@@ -57,6 +76,8 @@ ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多
 - CSS Modules - 模組化樣式管理
 - Axios - HTTP 客戶端
 - Chart.js - 數據可視化
+- Socket.IO - 即時數據更新
+- Tailwind CSS - 響應式設計
 
 ### 後端技術
 - Node.js
@@ -68,6 +89,7 @@ ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多
 - Docker 容器化
 - Nginx 反向代理
 - PM2 進程管理
+- Vercel 平台部署選項
 
 ## 專案結構
 
@@ -89,10 +111,7 @@ project/
 │   ├── globals.css     # 全局樣式
 │   ├── theme.css       # 主題變量
 │   ├── Home.module.css # 首頁樣式
-│   ├── FundingRate.module.css
-│   ├── Volume.module.css
-│   ├── CexEarn.module.css
-│   └── LeveragedSpot.module.css
+│   └── [其他樣式文件]
 ├── public/             # 靜態資源
 ├── api/                # API 路由
 ├── lib/                # 工具函數
@@ -105,228 +124,8 @@ project/
 - Node.js >= 14.0.0
 - MongoDB >= 4.4
 - Redis >= 6.0
-- Socket.IO - 即時數據更新
 
-### 安裝步驟
-1. 克隆專案
-```bash
-git clone https://github.com/yuhsien0411/ArbiMaster.git
-cd ArbiMaster
-```
-
-2. 安裝依賴
-```bash
-npm install
-npm install socket.io-client
-```
-
-3. 配置環境變量
-```bash
-cp .env.example .env.local
-# 編輯 .env.local 文件，填入必要的配置信息
-```
-
-4. 啟動開發服務器
-```bash
-npm run dev
-```
-
-### 構建部署
-```bash
-# 構建生產版本
-npm run build
-
-# 啟動生產服務器
-npm start
-```
-
-## 貢獻指南
-
-1. Fork 專案
-2. 創建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟 Pull Request
-
-## 授權協議
-
-本專案採用 MIT 授權協議 - 詳見 [LICENSE](LICENSE) 文件
-
-## 聯繫方式
-
-- 作者：Yu Hsien ,Jerry
-
-## 使用指南
-
-### 資金費率頁面
-
-- 查看各交易所的資金費率數據
-- 按幣種或交易所排序
-- 篩選特定交易所的數據
-- 支援深色模式切換
-
-### 資金流向頁面
-
-- 查看市場資金流入和流出情況
-- 分析不同時間段的資金流向變化
-
-### CEX 理財收益頁面
-
-- 比較各大交易所的穩定幣活期理財收益率
-- 支援 USDT、USDC、DAI 三種主要穩定幣
-- 按幣種和收益率排序
-- 顯示最低投資金額和鎖定期信息
-- 數據每 2 分鐘自動更新
-- 支援深色模式顯示
-
-### 其他功能頁面
-
-- 恐懼與貪婪指數：查看市場情緒指標
-- 未平倉合約量：監控市場槓桿情況
-- 交易量分析：追蹤市場活躍度
-
-### 槓桿現貨頁面
-
-- 提供各大交易所的槓桿現貨交易數據比較
-- 顯示最大槓桿倍數、交易對、手續費率等重要參數
-- 支持按交易所篩選數據
-- 實時排序功能，方便用戶快速找到合適的交易平台
-- 清晰展示各交易所的清算閾值和最小交易額要求
-- 數據定期更新，確保信息的時效性
-
-## API 使用限制
-
-為了確保 API 的穩定性和避免超出使用限制，我們對各交易所的 API 請求做了以下處理：
-
-- 使用緩存機制，相同數據 2 分鐘內只請求一次
-- 錯誤重試和錯誤處理機制
-- 支援跨域請求（CORS）
-
-## 貢獻指南
-
-歡迎提交問題報告和功能請求。如果您想貢獻代碼，請遵循以下步驟：
-
-1. Fork 專案
-2. 創建您的功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 開啟一個 Pull Request
-
-## 授權
-
-本專案採用 ISC 授權 - 詳情請參閱 [LICENSE](LICENSE) 文件。
-
-## 聯絡方式
-
-如有任何問題或建議，請通過以下方式聯絡我們：
-
-* GitHub Issues：[https://github.com/yuhsien0411/ArbiMaster/issues](https://github.com/yuhsien0411/ArbiMaster/issues)
-
-## 開發流程
-
-1. 克隆專案
-```bash
-git clone https://github.com/yuhsien0411/ArbiMaster.git
-```
-
-2. 開發流程
-- 克隆完成後直接開始編輯
-- 不需要另外創建倉庫
-- 編輯完成後直接推送到 master 分支
-
-3. 提交更改
-- 使用 GitHub 的推送選項
-- 統一使用 master 分支
-- 其他分支已刪除
-
-# 永續合約資金費率比較工具
-
-這是一個用於比較各大交易所永續合約資金費率的工具，提供即時數據和歷史趨勢分析。
-
-## 功能特點
-
-- 🔄 即時更新：每30秒自動更新資金費率數據
-- 📊 多交易所支持：
-  - Binance
-  - Bybit
-  - OKX
-  - Bitget
-  - Gate.io
-  - HyperLiquid
-- 📈 歷史趨勢：查看各幣種的歷史資金費率走勢
-- 🎨 深色/淺色模式：支持自適應主題切換
-- 🔍 搜索功能：快速查找特定幣種
-- 📱 響應式設計：完美支持移動端和桌面端
-- ⚡ 性能優化：使用緩存和重試機制確保數據穩定性
-
-## 最新更新
-
-### 2024-03-xx
-- ✨ 新增歷史資金費率頁面
-  - 支持查看24小時、7天、30天的歷史數據
-  - 提供圖表視覺化展示
-  - 支持按交易所篩選數據
-  - 顯示累計費率統計
-- 🚀 新增交易所支持
-  - 添加 Gate.io 資金費率數據
-  - 整合 Gate.io 歷史資金費率
-  - 解決跨域資源共享 (CORS) 問題
-- 🔧 性能優化
-  - 增加 API 請求超時處理
-
-## 技術棧
-
-- Next.js
-- React
-- Chart.js
-- Socket.IO
-- Tailwind CSS
-
-## 本地開發
-
-1. 克隆倉庫：
-```bash
-git clone https://github.com/yourusername/funding-rate-comparison.git
-cd funding-rate-comparison
-```
-
-2. 安裝依賴：
-```bash
-npm install
-```
-
-3. 運行開發服務器：
-```bash
-npm run dev
-```
-
-4. 打開瀏覽器訪問：`http://localhost:3000`
-
-## 部署
-
-該項目可以輕鬆部署到 Vercel 平台：
-
-1. Fork 本倉庫
-2. 在 Vercel 中導入項目
-3. 部署完成
-
-## 貢獻指南
-
-歡迎提交 Pull Request 或提出 Issue。在提交代碼前，請確保：
-
-1. 代碼符合項目的代碼風格
-2. 所有測試通過
-3. 提交信息清晰明確
-
-## 授權協議
-
-MIT License
-
-## 免責聲明
-
-本工具僅供參考，不構成投資建議。使用本工具進行交易決策的風險由使用者自行承擔。
-
-## 環境變量
+### 環境變量
 請確保設置以下環境變量：
 ```
 BINANCE_API_KEY=your_binance_api_key
@@ -340,10 +139,11 @@ GATEIO_API_KEY=your_gateio_api_key
 GATEIO_API_SECRET=your_gateio_api_secret
 ```
 
-## 安裝和運行
-1. 克隆項目
+### 安裝步驟
+1. 克隆專案
 ```bash
 git clone https://github.com/yuhsien0411/ArbiMaster.git
+cd ArbiMaster
 ```
 
 2. 安裝依賴
@@ -351,20 +151,58 @@ git clone https://github.com/yuhsien0411/ArbiMaster.git
 npm install
 ```
 
-3. 運行開發服務器
+3. 配置環境變量
+```bash
+cp .env.example .env.local
+# 編輯 .env.local 文件，填入必要的配置信息
+```
+
+4. 啟動開發服務器
 ```bash
 npm run dev
 ```
 
-4. 構建生產版本
-```bash
-npm run build
+5. 訪問應用
+```
+http://localhost:3000
 ```
 
+### 構建部署
+```bash
+# 構建生產版本
+npm run build
+
+# 啟動生產服務器
+npm start
+```
+
+## API 使用限制
+
+為了確保 API 的穩定性和避免超出使用限制，我們對各交易所的 API 請求做了以下處理：
+
+- 使用緩存機制，相同數據 2 分鐘內只請求一次
+- 錯誤重試和錯誤處理機制
+- 支援跨域請求（CORS）
+- API 請求超時處理
+
 ## 使用說明
-1. 訪問 http://localhost:3000
-2. 在搜索框中輸入幣種代碼（如 BTC、ETH 等）
-3. 查看各交易所的槓桿現貨利率數據
+
+### 資金費率頁面
+- 查看各交易所的資金費率數據
+- 按幣種或交易所排序
+- 篩選特定交易所的數據
+- 支援深色模式切換
+
+### 槓桿現貨頁面
+- 在搜索框中輸入幣種代碼（如 BTC、ETH 等）
+- 查看各交易所的槓桿現貨利率數據
+- 按交易所篩選數據
+- 使用排序功能找到合適的交易平台
+
+### 其他功能頁面
+- 恐懼與貪婪指數：查看市場情緒指標
+- 未平倉合約量：監控市場槓桿情況
+- 交易量分析：追蹤市場活躍度
 
 ## 注意事項
 - 請確保 API 密鑰的安全性
@@ -372,9 +210,28 @@ npm run build
 - 定期更新 API 密鑰
 
 ## 貢獻指南
-歡迎提交 Issue 和 Pull Request
 
-## 授權
-MIT License
+1. Fork 專案
+2. 創建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 開啟 Pull Request
+
+## 開發流程
+- 克隆完成後直接開始編輯
+- 不需要另外創建倉庫
+- 編輯完成後直接推送到 master 分支
+- 使用 GitHub 的推送選項
+- 統一使用 master 分支
+
+## 聯絡方式
+- 作者：Yu Hsien, Jerry
+- GitHub Issues：[https://github.com/yuhsien0411/ArbiMaster/issues](https://github.com/yuhsien0411/ArbiMaster/issues)
+
+## 授權協議
+本專案採用 MIT 授權協議 - 詳見 [LICENSE](LICENSE) 文件
+
+## 免責聲明
+本工具僅供參考，不構成投資建議。使用本工具進行交易決策的風險由使用者自行承擔。
 
 
