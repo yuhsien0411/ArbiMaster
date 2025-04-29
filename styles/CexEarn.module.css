@@ -11,6 +11,33 @@
   margin-bottom: 30px;
 }
 
+.headerControls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.darkModeToggle {
+  background: var(--card-bg, #f3f4f6);
+  color: var(--text-color, #333);
+  border: 1px solid var(--card-border, #e5e7eb);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.darkModeToggle:hover {
+  background: var(--card-hover, #ebedf0);
+  transform: translateY(-1px);
+}
+
 .homeButton {
   background: var(--text-accent, #3b82f6);
   color: white;
@@ -90,6 +117,32 @@
   color: #4caf50;
 }
 
+.rateHigher {
+  color: #f44336; /* 紅色，表示過去24小時利率高於預估利率 */
+}
+
+.rateLower {
+  color: #4caf50; /* 綠色，表示過去24小時利率低於預估利率 */
+}
+
+.rateTrend {
+  margin-left: 3px;
+  font-weight: bold;
+}
+
+.borrowAmount {
+  color: var(--text-color);
+  display: block;
+}
+
+.nativeBorrowAmount {
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+  margin-left: 4px;
+  display: block;
+  margin-top: 2px;
+}
+
 .loading, .error {
   text-align: center;
   padding: 40px;
@@ -125,4 +178,161 @@
   .dataTable th, .dataTable td {
     padding: 8px 10px;
   }
-} 
+}
+
+.quickSearchInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid var(--card-border);
+  background-color: var(--input-bg, #fff);
+  color: var(--text-color);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.quickSearchInput:focus {
+  border-color: var(--text-accent, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.searchIndicator {
+  min-height: 24px;
+  margin: 5px 0;
+}
+
+.searchHint {
+  font-size: 0.9rem;
+  color: var(--text-muted, #6b7280);
+  font-style: italic;
+}
+
+.quickSearchContainer {
+  margin-bottom: 30px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.quickSearchBox h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: var(--text-accent, #3b82f6);
+}
+
+.quickSearchInputGroup {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.coinSuggestions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.coinSuggestions span {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9rem;
+  margin-right: 4px;
+}
+
+.coinSuggestionBtn {
+  background-color: var(--card-hover);
+  color: var(--text-color);
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 6px;
+}
+
+.coinSuggestionBtn:hover {
+  background-color: var(--text-accent, #3b82f6);
+  color: white;
+  border-color: var(--text-accent, #3b82f6);
+}
+
+.quickSearchButton {
+  background: var(--text-accent, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quickSearchButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.clearQuickSearchBtn {
+  background: var(--text-muted, #6b7280);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.clearQuickSearchBtn:hover {
+  opacity: 0.9;
+}
+
+.quickSearchResults {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--card-border);
+}
+
+.quickSearchResults h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.quickResultTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--card-border);
+  margin-bottom: 0;
+}
+
+.quickResultTable th, .quickResultTable td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.quickResultTable th {
+  background-color: var(--card-hover);
+  font-weight: bold;
+}
+
+.quickResultTable tr:hover {
+  background-color: var(--card-hover);
+}
+
+.noResults {
+  padding: 15px;
+  color: var(--text-muted, #6b7280);
+  font-style: italic;
+  text-align: center;
+  background-color: var(--card-hover);
+  border-radius: 5px;
+}

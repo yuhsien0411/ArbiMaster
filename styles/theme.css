@@ -23,9 +23,11 @@
   --error-color: #f44336;
   --warning-color: #ff9800;
   --info-color: #2196f3;
+  --input-bg: #ffffff;
+  --text-muted: #6b7280;
 }
 
-[data-theme='dark'] {
+[data-theme='dark'], .dark-mode {
   --bg-primary: #0a0b0d;
   --bg-nav: rgba(17, 19, 23, 0.8);
   --bg-card: #16181d;
@@ -50,6 +52,9 @@
   --error-color: #e57373;
   --warning-color: #ffb74d;
   --info-color: #64b5f6;
+  --input-bg: #2a2a2a;
+  --text-muted: #8b949e;
+  --text-color: #e6edf3;
 }
 
 * {
