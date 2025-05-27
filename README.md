@@ -1,13 +1,13 @@
 # ArbiMaster
 
+ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多個交易所的資金費率、資金流向、持倉量等數據的即時比較和分析。
+
 ## 版本信息
 - 當前版本：v1.4.0
 - 更新內容：
   - 優化槓桿現貨API數據獲取
   - 完善錯誤處理機制
   - 改進日誌輸出系統
-
-ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多個交易所的資金費率、資金流向、持倉量等數據的即時比較和分析。
 
 ## 功能特點
 
@@ -42,11 +42,7 @@ ArbiMaster 是一個專注於加密貨幣套利機會的監控平台，提供多
 - 支持不同時間週期的利率顯示（1小時、1天、1年）
 - 顯示最大槓桿倍數、交易對、手續費率等重要參數
 - 清晰展示各交易所的清算閾值和最小交易額要求
-- 目前支持的交易所：
-  - Binance（全倉槓桿）
-  - Bybit（全倉槓桿）
-  - OKX（全倉槓桿）
-）
+- 目前支持的交易所：Binance（全倉槓桿）、Bybit（全倉槓桿）、OKX（全倉槓桿）
 
 ### 6. 價格比較
 - 支持多個交易所的現貨價格比較
@@ -133,7 +129,7 @@ BINANCE_API_SECRET=your_binance_api_secret
 
 BITGET_API_KEY=your_bitget_api_key
 BITGET_API_SECRET=your_bitget_api_secret
-BITGET_PASSPHRASE = your_bitget_passphrase
+BITGET_PASSPHRASE=your_bitget_passphrase
 
 GATEIO_API_KEY=your_gateio_api_key
 GATEIO_API_SECRET=your_gateio_api_secret
@@ -204,25 +200,24 @@ npm start
 - 未平倉合約量：監控市場槓桿情況
 - 交易量分析：追蹤市場活躍度
 
-## 注意事項
-- 請確保 API 密鑰的安全性
-- 建議在測試環境中先進行測試
-- 定期更新 API 密鑰
-
-## 貢獻指南
-
-1. Fork 專案
-2. 創建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 開啟 Pull Request
-
 ## 開發流程
 - 克隆完成後直接開始編輯
 - 不需要另外創建倉庫
 - 編輯完成後直接推送到 master 分支
 - 使用 GitHub 的推送選項
 - 統一使用 master 分支
+
+## 注意事項
+- 請確保 API 密鑰的安全性
+- 建議在測試環境中先進行測試
+- 定期更新 API 密鑰
+
+## 貢獻指南
+1. Fork 專案
+2. 創建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 開啟 Pull Request
 
 ## 聯絡方式
 - 作者：Yu Hsien, Jerry

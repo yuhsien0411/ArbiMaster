@@ -16,6 +16,8 @@ export default function CexEarn() {
   const [quickSearchCoin, setQuickSearchCoin] = useState('');
   const [quickSearchResults, setQuickSearchResults] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const quickSearchResultsRef = useRef(null);
 
@@ -63,14 +65,19 @@ export default function CexEarn() {
           // 提取所有可用的幣種
           const coins = [...new Set(data.map(item => item.coin))];
           setAvailableCoins(coins);
+          
+          // 設置最後更新時間
+          setLastUpdated(new Date());
         } else {
           throw new Error('無效的數據格式');
         }
         
         setLoading(false);
+        setRefreshing(false);
       } catch (err) {
         setError('獲取數據失敗，請稍後再試');
         setLoading(false);
+        setRefreshing(false);
         console.error('Error fetching data:', err);
       }
     };
@@ -83,6 +90,38 @@ export default function CexEarn() {
     // 清理函數
     return () => clearInterval(intervalId);
   }, []);
+
+  // 手動刷新數據
+  const handleRefresh = () => {
+    setRefreshing(true);
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/api/cexearn');
+        
+        if (response.data && response.data.success && response.data.data) {
+          const data = response.data.data;
+          setEarnData(data);
+          
+          // 提取所有可用的幣種
+          const coins = [...new Set(data.map(item => item.coin))];
+          setAvailableCoins(coins);
+          
+          // 設置最後更新時間
+          setLastUpdated(new Date());
+        } else {
+          throw new Error('無效的數據格式');
+        }
+        
+        setRefreshing(false);
+      } catch (err) {
+        setError('獲取數據失敗，請稍後再試');
+        setRefreshing(false);
+        console.error('Error fetching data:', err);
+      }
+    };
+    
+    fetchData();
+  };
 
   // 排序功能
   const requestSort = (key) => {
@@ -152,8 +191,6 @@ export default function CexEarn() {
       // 按收益率排序
       results.sort((a, b) => b.apy - a.apy);
       setQuickSearchResults(results);
-      
-      // 移除自動滾動功能
     } else {
       setQuickSearchResults([]);
     }
@@ -172,6 +209,12 @@ export default function CexEarn() {
     return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
+  // 格式化最後更新時間
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return '';
+    return lastUpdated.toLocaleTimeString();
+  };
+
   // 獲取處理後的數據
   const sortedData = getSortedData();
 
@@ -187,6 +230,17 @@ export default function CexEarn() {
           <h1 className={styles.pageTitle}>CEX 理財收益</h1>
           <div className={styles.headerControls}>
             <button 
+              className={styles.refreshButton}
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="刷新數據"
+            >
+              {refreshing ? '刷新中...' : '刷新數據'}
+              <span className={`${styles.refreshIcon} ${refreshing ? styles.spinning : ''}`}>
+                ↻
+              </span>
+            </button>
+            <button 
               className={styles.darkModeToggle}
               onClick={toggleDarkMode}
               title={darkMode ? "切換至淺色模式" : "切換至深色模式"}
@@ -201,6 +255,12 @@ export default function CexEarn() {
             </button>
           </div>
         </div>
+        
+        {lastUpdated && (
+          <div className={styles.lastUpdated}>
+            最後更新時間: {formatLastUpdated()}
+          </div>
+        )}
         
         <div className={styles.quickSearchContainer}>
           <div className={styles.quickSearchBox}>
@@ -285,9 +345,11 @@ export default function CexEarn() {
                     </thead>
                     <tbody>
                       {quickSearchResults.map((item, index) => (
-                        <tr key={index}>
+                        <tr key={index} className={index === 0 ? styles.bestRate : ''}>
                           <td>{item.exchange}</td>
-                          <td className={styles.highlight}>{item.apy.toFixed(2)}%</td>
+                          <td className={styles.highlight}>{item.apy.toFixed(2)}%
+                            {index === 0 && <span className={styles.bestRateBadge}>最高</span>}
+                          </td>
                           <td>{item.minAmount}</td>
                           <td>{item.lockPeriod}</td>
                           <td>
@@ -359,9 +421,17 @@ export default function CexEarn() {
         </div>
 
         {loading ? (
-          <div className={styles.loading}>載入中...</div>
+          <div className={styles.loading}>
+            <div className={styles.loadingSpinner}></div>
+            <p>載入中，請稍候...</p>
+          </div>
         ) : error ? (
-          <div className={styles.error}>{error}</div>
+          <div className={styles.error}>
+            <p>{error}</p>
+            <button onClick={handleRefresh} className={styles.retryButton}>
+              重試
+            </button>
+          </div>
         ) : (
           <>
             {searchTerm.trim() !== '' && (
@@ -395,29 +465,37 @@ export default function CexEarn() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedData.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.exchange}</td>
-                      <td>{item.coin}</td>
-                      <td className={styles.highlight}>{item.apy.toFixed(2)}%</td>
-                      <td>{item.minAmount}</td>
-                      <td>{item.lockPeriod}</td>
-                      <td>
-                        {item.avgAmtUsd ? (
-                          <span className={styles.borrowAmount}>
-                            ${Number(item.avgAmtUsd).toLocaleString()}
-                            {item.avgAmt && (
-                              <span className={styles.nativeBorrowAmount}>
-                                ({Number(item.avgAmt).toLocaleString()} {item.coin})
-                              </span>
-                            )}
-                          </span>
-                        ) : (
-                          '-'
-                        )}
+                  {sortedData.length > 0 ? (
+                    sortedData.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item.exchange}</td>
+                        <td>{item.coin}</td>
+                        <td className={styles.highlight}>{item.apy.toFixed(2)}%</td>
+                        <td>{item.minAmount}</td>
+                        <td>{item.lockPeriod}</td>
+                        <td>
+                          {item.avgAmtUsd ? (
+                            <span className={styles.borrowAmount}>
+                              ${Number(item.avgAmtUsd).toLocaleString()}
+                              {item.avgAmt && (
+                                <span className={styles.nativeBorrowAmount}>
+                                  ({Number(item.avgAmt).toLocaleString()} {item.coin})
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className={styles.noDataMessage}>
+                        未找到符合條件的數據。請嘗試調整搜索條件。
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

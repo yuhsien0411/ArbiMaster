@@ -7,6 +7,7 @@ import styles from '../styles/Home.module.css';
 
 export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     // 從 localStorage 讀取主題設置
@@ -19,6 +20,18 @@ export default function Home() {
       setIsDarkMode(prefersDark);
       localStorage.setItem('theme', prefersDark ? 'dark' : 'light');
     }
+    
+    // 添加滾動監聽
+    const handleScroll = () => {
+      if (window.scrollY > 30) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -35,16 +48,21 @@ export default function Home() {
   return (
     <div className={styles.appContainer}>
       <Head>
-        <title>ArbiMaster</title>
-        <meta name="description" content="加密貨幣套利分析工具" />
+        <title>ArbiMaster | 加密貨幣套利分析平台</title>
+        <meta name="description" content="ArbiMaster是專業的加密貨幣套利分析工具，提供即時市場數據、交易所資訊和市場情緒指標等全方位分析" />
+        <meta name="keywords" content="加密貨幣,套利,交易所,資金費率,市場分析,比特幣,以太坊" />
+        <meta property="og:title" content="ArbiMaster | 加密貨幣套利分析平台" />
+        <meta property="og:description" content="專業的加密貨幣套利與市場數據分析平台" />
+        <meta property="og:type" content="website" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <nav className={styles.navbar}>
+      <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
         <div className={styles.navContent}>
-          <div className={styles.logo}>
+          <Link href="/" className={styles.logo}>
             <span className={styles.logoIcon}>⚡️</span>
-            <span>ArbiMaster</span>
-          </div>
+            <span className={styles.logoText}>ArbiMaster</span>
+          </Link>
           <div className={styles.navRight}>
             <FearGreedWidget />
             <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
@@ -54,20 +72,37 @@ export default function Home() {
 
       <main className={styles.main}>
         <section className={styles.hero}>
-          <h1 className={styles.heroTitle}>
-            專業的加密貨幣
-            <br />
-            市場數據分析平台
-          </h1>
-          <p className={styles.heroSubtitle}>
-            提供即時市場數據、交易所資訊、市場情緒指標等全方位分析工具
-          </p>
+          <div className={styles.heroContent}>
+            <h1 className={styles.heroTitle}>
+              專業的加密貨幣
+              <br />
+              市場數據分析平台
+            </h1>
+            <p className={styles.heroSubtitle}>
+              提供即時市場數據、交易所資訊、市場情緒指標等全方位分析工具
+            </p>
+            <div className={styles.heroCta}>
+              <Link href="/funding-rate" className={styles.primaryButton}>
+                查看資金費率
+                <span className={styles.buttonIcon}>→</span>
+              </Link>
+              <Link href="/cexearn" className={styles.secondaryButton}>
+                探索 CEX 收益
+                <span className={styles.buttonIcon}>→</span>
+              </Link>
+            </div>
+          </div>
+          <div className={styles.heroGraphic}>
+            <div className={styles.graphicCircle}></div>
+            <div className={styles.graphicCircle}></div>
+            <div className={styles.graphicCircle}></div>
+          </div>
         </section>
 
         <section className={styles.features}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>市場分析工具</h2>
-            <p className={styles.sectionDescription}>全方位的加密貨幣市場數據分析工具，助您洞察市場動向</p>
+            <p className={styles.sectionDescription}>全方位的加密貨幣市場數據分析工具，助您洞察市場動向，把握投資良機</p>
           </div>
           
           <div className={styles.featureGrid}>
@@ -135,14 +170,6 @@ export default function Home() {
                 stats: { label: '槓桿倍數', value: '最高10x' },
                 title: '槓桿現貨',
                 description: '追蹤槓桿現貨交易數據，把握市場趨勢和投資機會'
-              },
-              {
-                href: '/lending',
-                icon: '💎',
-                iconClass: styles.lending,
-                stats: { label: '支持幣種', value: '10+' },
-                title: '質押借貸',
-                description: '比較各大交易所的質押借貸利率，優化資產利用效率'
               }
             ].map((feature, index) => (
               <Link href={feature.href} key={index} className={styles.featureCard}>
@@ -169,7 +196,42 @@ export default function Home() {
             ))}
           </div>
         </section>
+        
+        <section className={styles.aboutSection}>
+          <div className={styles.aboutContent}>
+            <h2 className={styles.aboutTitle}>關於 ArbiMaster</h2>
+            <p className={styles.aboutDescription}>
+              ArbiMaster 是專為加密貨幣交易者設計的綜合性分析平台，提供多維度數據，幫助您做出更明智的交易決策。
+              我們持續監控多個主流交易所的市場數據，讓您輕鬆把握套利機會和市場趨勢。
+            </p>
+            <div className={styles.aboutStats}>
+              <div className={styles.statItem}>
+                <span className={styles.statValue}>8+</span>
+                <span className={styles.statLabel}>支持交易所</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statValue}>50+</span>
+                <span className={styles.statLabel}>監控幣種</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statValue}>24/7</span>
+                <span className={styles.statLabel}>即時更新</span>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
+      
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          <p className={styles.copyright}>© {new Date().getFullYear()} ArbiMaster. 保留所有權利。</p>
+          <div className={styles.footerLinks}>
+            <Link href="/privacy">隱私政策</Link>
+            <Link href="/terms">使用條款</Link>
+            <Link href="mailto:contact@arbimaster.com">聯絡我們</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 
