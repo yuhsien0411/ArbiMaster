@@ -186,23 +186,18 @@ async function handleDataCollection(req, res, symbol) {
 // 處理模型比較請求
 async function handleModelComparison(req, res) {
   try {
-          console.log('📊 簡化版模型比較...');
-      
-      return res.status(200).json({
-        success: true,
-        message: '簡化版模型比較完成',
-        comparison: {
-          currentModel: 'Simple Linear Regression',
-          performance: 'Basic',
-          note: '簡化版只有一個模型'
-        }
-      });
-    } else {
-      return res.status(400).json({
-        success: false,
-        error: '沒有足夠的模型版本進行比較'
-      });
-    }
+    console.log('📊 簡化版模型比較...');
+    
+    // 簡化版只返回基本模型資訊
+    return res.status(200).json({
+      success: true,
+      message: '簡化版模型比較完成',
+      comparison: {
+        currentModel: 'Simple Linear Regression',
+        performance: 'Basic',
+        note: '簡化版只有一個模型'
+      }
+    });
 
   } catch (error) {
     console.error('模型比較失敗:', error);
