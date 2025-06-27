@@ -1,9 +1,5 @@
 import axios from 'axios';
 import crypto from 'crypto';
-const GateApi = require('gate-api');
-
-
-
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

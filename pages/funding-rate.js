@@ -2,24 +2,31 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import axiosRetry from 'axios-retry';
 import styles from '../styles/FundingRate.module.css';
 
-// 配置 axios 重試
-axiosRetry(axios, {
-  retries: 3,
-  retryDelay: (retryCount) => {
-    return Math.min(1000 * Math.pow(2, retryCount - 1), 10000);
-  },
-  retryCondition: (error) => {
-    return axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-           error.code === 'ECONNABORTED' ||
-           (error.response && [408, 500, 502, 503, 504].includes(error.response.status)) ||
-           error.message.includes('timeout');
-  },
-  shouldResetTimeout: true,
-  timeout: 15000
-});
+// 自定義重試邏輯
+const axiosWithRetry = async (config, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await axios(config);
+    } catch (error) {
+      // 檢查是否應該重試
+      const shouldRetry = 
+        error.code === 'ECONNABORTED' ||
+        (error.response && [408, 500, 502, 503, 504].includes(error.response.status)) ||
+        error.message.includes('timeout') ||
+        !error.response; // 網路錯誤
+
+      if (i === retries - 1 || !shouldRetry) {
+        throw error;
+      }
+
+      // 等待後重試，使用指數退避
+      const delay = Math.min(1000 * Math.pow(2, i), 10000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
 
 export default function FundingRate() {
   const router = useRouter();
@@ -78,7 +85,9 @@ export default function FundingRate() {
           setIsUpdating(true);
         }
         
-        const response = await axios.get('/api/funding-rates', {
+        const response = await axiosWithRetry({
+          method: 'GET',
+          url: '/api/funding-rates',
           timeout: 15000,
           headers: {
             'Cache-Control': 'no-cache',

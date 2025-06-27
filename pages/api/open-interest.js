@@ -1,7 +1,3 @@
-// 引入必要的庫
-import fetch from 'node-fetch';
-import { Server } from 'socket.io';
-
 // 緩存數據和上次更新時間
 let cachedData = null;
 let lastUpdated = null;

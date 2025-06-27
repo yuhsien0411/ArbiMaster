@@ -1,4 +1,4 @@
-import { FundingRatePredictor } from '../../lib/predictors/FundingRatePredictor.js';
+import { SimplePredictor } from '../../lib/predictors/SimplePredictor.js';
 
 // 緩存預測結果
 let predictionCache = new Map();
@@ -54,7 +54,7 @@ async function handlePrediction(req, res) {
     
     switch (predictionType) {
       case 'funding_rate':
-        const ratePredictor = new FundingRatePredictor();
+        const ratePredictor = new SimplePredictor();
         predictions = await ratePredictor.predict(symbol, exchange);
         break;
         
@@ -102,7 +102,7 @@ async function handleTrainModel(req, res) {
   try {
     console.log('開始訓練模型...');
     
-    const ratePredictor = new FundingRatePredictor();
+    const ratePredictor = new SimplePredictor();
     const result = await ratePredictor.trainModel();
     
     res.status(200).json({
@@ -127,7 +127,7 @@ async function handleEvaluateModel(req, res) {
   try {
     console.log('開始評估模型...');
     
-    const ratePredictor = new FundingRatePredictor();
+    const ratePredictor = new SimplePredictor();
     await ratePredictor.initialize();
     const evaluation = await ratePredictor.evaluateModel();
     
