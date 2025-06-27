@@ -170,6 +170,14 @@ export default function Home() {
                 stats: { label: '槓桿倍數', value: '最高10x' },
                 title: '槓桿現貨',
                 description: '追蹤槓桿現貨交易數據，把握市場趨勢和投資機會'
+              },
+              {
+                href: '/predictions',
+                icon: '🤖',
+                iconClass: styles.predictions,
+                stats: { label: 'AI模型', value: '機器學習' },
+                title: 'AI 預測分析',
+                description: '基於機器學習的資金費率預測、套利機會分析和市場情緒預測'
               }
             ].map((feature, index) => (
               <Link href={feature.href} key={index} className={styles.featureCard}>
