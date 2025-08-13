@@ -1,0 +1,17 @@
+{
+  "weights": {
+    "technicalIndicators": 0.3066399830230293,
+    "volumeAnalysis": 0.20059693823337443,
+    "sentimentAnalysis": 0.2474554855370286,
+    "historicalPatterns": 0.24530759320656775
+  },
+  "trainingStats": {
+    "totalTrainingSessions": 8,
+    "totalPredictions": 8,
+    "correctPredictions": 3,
+    "accuracy": 37.5,
+    "lastTrainingDate": "2025-08-06T01:44:13.966Z",
+    "improvementRate": 37.5
+  },
+  "lastSaved": "2025-08-06T01:44:13.966Z"
+}

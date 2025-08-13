@@ -1,292 +1,220 @@
-# ArbiMaster - AI加密貨幣套利監控平台
+# ArbiMaster - AI驅動的加密貨幣套利監控與預測平台
 
-## 📋 專案簡介
+## 🚀 專案概述
 
-ArbiMaster是一個整合機器學習的加密貨幣套利監控平台，專為資訊工程系畢業專題設計。平台提供資金費率預測、套利機會識別和市場情緒分析功能。
+ArbiMaster 是一個基於 Next.js 14 的現代化加密貨幣套利監控平台，整合了 AI 預測分析功能。系統能夠實時監控多個交易所的資金費率、交易量、持倉量等關鍵指標，並運用機器學習技術提供資金費率預測、套利機會識別和市場情緒分析。
 
-## ✨ 主要功能
+## ✨ 核心功能
 
-- 🔮 **AI資金費率預測**: 基於機器學習的資金費率預測模型
-- 💰 **套利機會識別**: 自動識別跨交易所套利機會
-- 📊 **市場情緒分析**: 實時市場情緒監控
-- 📈 **數據視覺化**: 互動式圖表和儀表板
-- 🔄 **實時監控**: WebSocket實時數據更新
+### 🔮 AI 預測分析系統
+- **資金費率預測**: 基於歷史數據和技術指標預測未來資金費率變化
+- **套利機會識別**: 自動識別跨交易所套利機會並評估風險
+- **市場情緒分析**: 綜合分析市場情緒指標，提供交易建議
+- **模型性能追蹤**: 實時監控AI模型預測準確率和表現
 
-## 🛠️ 技術棧
+### 📊 實用AI預測 (新增)
+- **真實數據整合**: 使用實際API數據而非模擬數據
+- **多因子分析**: 結合技術指標、交易量、持倉量等多維度數據
+- **具體交易建議**: 提供明確的做多/做空/觀望建議
+- **風險評估**: 詳細的風險等級評估和止損建議
+- **歷史表現追蹤**: 顯示模型過往預測的準確性
+- **綜合分析報告**: 生成詳細的市場分析和投資建議
 
-- **前端**: Next.js, React, Material-UI, Chart.js
-- **後端**: Next.js API Routes
-- **AI/ML**: 簡化版線性回歸模型（純JavaScript實現）
-- **數據處理**: 自定義特徵工程
-- **部署**: Vercel/Netlify
+### 📈 數據監控
+- **實時資金費率**: 監控多個交易所的資金費率變化
+- **交易量分析**: 分析24小時交易量變化趨勢
+- **持倉量監控**: 追蹤開倉量變化，識別市場情緒
+- **資金流向**: 監控資金流入流出情況
+
+## 🛠️ 技術架構
+
+### 前端技術
+- **Next.js 14** - React 框架
+- **Material-UI** - UI 組件庫
+- **Chart.js** - 數據可視化
+- **Axios** - HTTP 客戶端
+
+### 後端技術
+- **Node.js** - 運行時環境
+- **TensorFlow.js** - 機器學習框架 (可選)
+- **Express.js** - API 路由處理
+
+### AI 模型
+- **RealisticPredictor**: 基於真實數據的多因子分析預測器
+- **FundingRatePredictor**: 神經網路資金費率預測器
+- **SimplePredictor**: 純JavaScript線性回歸預測器
 
 ## 🚀 快速開始
 
-### 方法一：一鍵安裝（推薦）
-
-#### Windows用戶
+### 1. 克隆專案
 ```bash
-# 下載並執行安裝腳本
-install.bat
-```
-
-#### macOS/Linux用戶
-```bash
-# 下載並執行安裝腳本
-chmod +x install.sh
-./install.sh
-```
-
-### 方法二：手動安裝
-
-1. **克隆專案**
-```bash
-git clone https://github.com/your-username/ArbiMaster.git
+git clone <repository-url>
 cd ArbiMaster
 ```
 
-2. **安裝依賴**
+### 2. 安裝依賴
 ```bash
 npm install
 ```
 
-3. **啟動開發服務器**
+### 3. 環境配置
+創建 `.env.local` 文件：
+```env
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+### 4. 啟動開發服務器
 ```bash
 npm run dev
 ```
 
-4. **開啟瀏覽器**
-訪問 [http://localhost:3000](http://localhost:3000)
-
-## 🔧 TensorFlow.js 安裝問題解決方案
-
-### 問題描述
-在Windows系統上安裝TensorFlow.js時可能遇到以下錯誤：
-```
-node-pre-gyp ERR! not ok
-* Downloading libtensorflow
-* Building TensorFlow Node.js bindings
-```
-
-### 解決方案
-
-#### 方案一：使用簡化版預測器（推薦）
-專案已內建簡化版預測器，不依賴TensorFlow.js：
-- 使用純JavaScript實現的線性回歸模型
-- 無需編譯原生依賴
-- 跨平台兼容性更好
-
-#### 方案二：強制安裝TensorFlow.js
-如果仍需要使用完整版AI模型：
-
-```bash
-# 清理npm緩存
-npm cache clean --force
-
-# 刪除node_modules和package-lock.json
-rm -rf node_modules package-lock.json
-
-# 重新安裝依賴
-npm install
-
-# 強制安裝TensorFlow.js
-npm run install:tf
-```
-
-#### 方案三：使用TensorFlow.js Web版本
-```bash
-# 安裝Web版本（無需編譯）
-npm run install:tfjs
-```
-
-### 系統要求
-- **Node.js**: >= 18.0.0
-- **npm**: >= 8.0.0
-- **記憶體**: >= 4GB RAM
-- **磁碟空間**: >= 2GB
+訪問 [http://localhost:3000](http://localhost:3000) 查看應用。
 
 ## 📁 專案結構
 
 ```
 ArbiMaster/
-├── components/          # React組件
-│   ├── Dashboard/      # 儀表板組件
-│   ├── Prediction/     # 預測相關組件
-│   └── Charts/         # 圖表組件
-├── lib/                # 核心庫
-│   ├── predictors/     # 預測模型
-│   │   ├── SimplePredictor.js    # 簡化版預測器
-│   │   └── EnhancedPredictor.js  # 增強版預測器
-│   └── utils/          # 工具函數
-├── pages/              # Next.js頁面
-│   ├── api/           # API端點
-│   └── prediction/    # 預測頁面
-├── public/            # 靜態資源
-└── styles/            # 樣式文件
+├── pages/
+│   ├── api/
+│   │   ├── funding-rates.js          # 資金費率API
+│   │   ├── predictions.js            # 基礎AI預測API
+│   │   ├── realistic-predictions.js  # 實用AI預測API (新增)
+│   │   └── ...
+│   ├── predictions.js                # 基礎AI預測頁面
+│   ├── realistic-predictions.js      # 實用AI預測頁面 (新增)
+│   └── index.js                      # 主頁面
+├── lib/
+│   ├── predictors/
+│   │   ├── RealisticPredictor.js     # 實用預測器 (新增)
+│   │   ├── FundingRatePredictor.js   # 神經網路預測器
+│   │   └── SimplePredictor.js        # 簡化預測器
+│   └── utils/
+│       └── DataPreprocessor.js       # 數據預處理
+├── test-realistic-predictions.js     # 實用預測測試 (新增)
+└── README.md
 ```
 
-## 🎯 AI功能說明
+## 🔧 AI 功能詳解
 
-### 簡化版預測器
-- **模型類型**: 線性回歸
-- **特徵工程**: 8個核心特徵
-- **優勢**: 快速、穩定、跨平台
-- **適用場景**: 基礎預測需求
+### 實用AI預測系統
 
-### 特徵說明
-1. **當前費率**: 最新資金費率
-2. **費率變化**: 費率變化趨勢
-3. **交易量變化**: 交易量變化率
-4. **持倉量變化**: 持倉量變化率
-5. **時間特徵**: 24小時週期特徵
-6. **技術指標**: RSI等技術指標
-7. **市場情緒**: 基於費率和交易量的情緒
-8. **波動率**: 價格波動率
+#### 核心特點
+1. **真實數據源**: 整合實際的資金費率、交易量、持倉量API數據
+2. **多因子分析**: 結合技術指標(MA、RSI、波動率)、市場數據、情緒指標
+3. **實用建議**: 提供具體的做多/做空/觀望建議，包含預期收益和風險評估
+4. **歷史追蹤**: 記錄預測歷史，計算模型準確率
+5. **風險管理**: 詳細的風險評估和止損建議
 
-## 🔌 API端點
+#### 預測流程
+1. **數據收集**: 獲取真實的市場數據
+2. **技術分析**: 計算移動平均線、RSI、波動率等技術指標
+3. **情緒分析**: 基於費率、技術指標分析市場情緒
+4. **預測生成**: 綜合多因子生成預測結果
+5. **建議生成**: 基於預測結果生成交易建議
+6. **風險評估**: 評估交易風險並提供止損建議
 
-### 預測API
-```bash
-POST /api/predict
-Content-Type: application/json
-
-{
-  "symbol": "BTCUSDT",
-  "exchange": "Binance"
-}
-```
-
-### 訓練API
-```bash
-POST /api/train
-Content-Type: application/json
-
-{
-  "action": "train_and_evaluate",
-  "trainingData": [...]
-}
-```
+#### API 端點
+- `GET /api/realistic-predictions?action=predict` - 獲取預測
+- `GET /api/realistic-predictions?action=analysis` - 獲取綜合分析
+- `GET /api/realistic-predictions?action=history` - 獲取歷史記錄
+- `GET /api/realistic-predictions?action=performance` - 獲取性能統計
 
 ## 🧪 測試
 
-### 運行測試腳本
+### 測試實用AI預測
 ```bash
-# 測試預測功能
-node test-prediction.js
-
-# 測試訓練功能
-node test-training.js
+node test-realistic-predictions.js
 ```
 
-## 🚀 部署
-
-### Vercel部署
+### 測試基礎AI預測
 ```bash
-# 安裝Vercel CLI
-npm i -g vercel
-
-# 部署
-vercel
+node test-predictions.js
 ```
 
-### 本地生產環境
-```bash
-# 構建
-npm run build
-
-# 啟動
-npm start
-```
-
-## 🔧 故障排除
+## 🔍 故障排除
 
 ### 常見問題
 
 #### 1. npm install 失敗
+如果遇到 `node-pre-gyp` 錯誤：
 ```bash
 # 清理緩存
 npm cache clean --force
 
-# 刪除node_modules
-rm -rf node_modules package-lock.json
-
 # 重新安裝
 npm install
+
+# 如果仍有問題，使用簡化版本
+npm run install:tfjs
 ```
 
-#### 2. 端口被佔用
+#### 2. TensorFlow.js 安裝問題
+如果無法安裝 TensorFlow.js，系統會自動使用簡化的 JavaScript 預測器：
 ```bash
-# 查找佔用端口的進程
-lsof -i :3000
+# 檢查是否支援 TensorFlow.js
+npm run install:tf
 
-# 終止進程
-kill -9 <PID>
+# 或直接使用簡化版本
+npm run install:tfjs
 ```
 
-#### 3. 記憶體不足
+#### 3. API 錯誤
+確保所有 API 端點正常運行：
 ```bash
-# 增加Node.js記憶體限制
-export NODE_OPTIONS="--max-old-space-size=4096"
+# 檢查服務器狀態
+curl http://localhost:3000/api/funding-rates
 ```
 
-#### 4. 權限問題（Linux/macOS）
-```bash
-# 修復權限
-sudo chown -R $USER:$GROUP ~/.npm
-sudo chown -R $USER:$GROUP ~/.config
-```
+## 📊 功能對比
 
-## 📊 性能優化
+| 功能 | 基礎AI預測 | 實用AI預測 |
+|------|------------|------------|
+| 數據源 | 模擬數據 | 真實API數據 |
+| 預測方法 | 神經網路 | 多因子分析 |
+| 交易建議 | 基礎 | 詳細具體 |
+| 風險評估 | 簡單 | 全面 |
+| 歷史追蹤 | 無 | 完整 |
+| 實用性 | 中等 | 高 |
 
-### 前端優化
-- 使用React.memo減少重渲染
-- 實現虛擬滾動處理大量數據
-- 圖片懶加載
+## 🎯 使用場景
 
-### 後端優化
-- API響應緩存
-- 數據庫查詢優化
-- 並發請求限制
+### 投資者
+- 獲取資金費率變化預測
+- 識別套利機會
+- 評估市場情緒
+- 制定交易策略
 
-## 🤝 貢獻指南
+### 交易員
+- 實時監控多交易所數據
+- 快速識別套利機會
+- 風險評估和管理
+- 歷史表現分析
 
-1. Fork專案
-2. 創建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟Pull Request
+### 研究人員
+- 市場數據分析
+- AI模型研究
+- 量化交易策略開發
+- 學術研究支持
 
-## 📝 更新日誌
+## 🔮 未來規劃
 
-### v2.0.0 (2024-12-27)
-- ✅ 新增簡化版預測器（無TensorFlow.js依賴）
-- ✅ 優化跨平台兼容性
-- ✅ 新增一鍵安裝腳本
-- ✅ 完善故障排除指南
-- ✅ 更新依賴版本
-
-### v1.0.0 (2024-12-26)
-- 🎉 初始版本發布
-- 🔮 AI資金費率預測
-- 📊 數據視覺化
-- 🔄 實時監控
+- [ ] 增加更多交易所支援
+- [ ] 優化AI模型準確率
+- [ ] 添加更多技術指標
+- [ ] 實現自動化交易
+- [ ] 移動端應用開發
+- [ ] 更多幣種支援
 
 ## 📄 授權
 
-本專案採用 MIT 授權 - 詳見 [LICENSE](LICENSE) 文件
+本專案僅供學習和研究使用，請勿用於實際投資決策。
 
-## 📞 聯絡資訊
+## 🤝 貢獻
 
-- **專案維護者**: ArbiMaster Team
-- **Email**: contact@arbimaster.com
-- **GitHub**: [https://github.com/your-username/ArbiMaster](https://github.com/your-username/ArbiMaster)
-
-## 🙏 致謝
-
-感謝所有貢獻者和開源社區的支持！
+歡迎提交 Issue 和 Pull Request！
 
 ---
 
-⭐ 如果這個專案對您有幫助，請給我們一個星標！
+**免責聲明**: 本系統僅供參考，不構成投資建議。投資有風險，請謹慎決策。
 
 

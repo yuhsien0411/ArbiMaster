@@ -1,0 +1,13 @@
+{
+  "totalContributors": 1,
+  "totalTrainingSessions": 14,
+  "averageAccuracy": 0.5625000000000001,
+  "topContributors": [
+    {
+      "userId": "::1_axios/1.8.3",
+      "contributions": 14,
+      "averageQuality": 0.5625000000000001
+    }
+  ],
+  "lastUpdated": "2025-08-06T01:54:32.459Z"
+}

@@ -178,6 +178,14 @@ export default function Home() {
                 stats: { label: 'AI模型', value: '機器學習' },
                 title: 'AI 預測分析',
                 description: '基於機器學習的資金費率預測、套利機會分析和市場情緒預測'
+              },
+              {
+                href: '/realistic-predictions',
+                icon: '📈',
+                iconClass: styles.realisticPredictions,
+                stats: { label: '數據來源', value: '真實數據' },
+                title: 'AI 實用預測',
+                description: '基於真實數據的多因子分析，提供具體交易建議和歷史表現追蹤'
               }
             ].map((feature, index) => (
               <Link href={feature.href} key={index} className={styles.featureCard}>

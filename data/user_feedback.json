@@ -1,0 +1,122 @@
+[
+  {
+    "symbol": "BTC",
+    "exchange": "Binance",
+    "predictedDirection": "bullish",
+    "actualDirection": "bullish",
+    "userRating": 4,
+    "features": {
+      "technicalStrength": 0.6,
+      "volumeStrength": 0.4,
+      "sentimentStrength": 0.5,
+      "historicalStrength": 0.5
+    },
+    "timestamp": "2025-08-06T01:44:13.942Z",
+    "modelVersion": 1
+  },
+  {
+    "symbol": "ETH",
+    "exchange": "Bybit",
+    "predictedDirection": "bearish",
+    "actualDirection": "bearish",
+    "userRating": 5,
+    "features": {
+      "technicalStrength": 0.6454893065249503,
+      "volumeStrength": 0.39671275073870155,
+      "sentimentStrength": 0.5065202870150037,
+      "historicalStrength": 0.5470549024388504
+    },
+    "timestamp": "2025-08-06T01:44:13.946Z",
+    "modelVersion": 2
+  },
+  {
+    "symbol": "BTC",
+    "exchange": "Binance",
+    "predictedDirection": "bullish",
+    "actualDirection": "bearish",
+    "userRating": 2,
+    "features": {
+      "technicalStrength": 0.7171117527689466,
+      "volumeStrength": 0.48437722664699645,
+      "sentimentStrength": 0.537814822076457,
+      "historicalStrength": 0.4040410519915321
+    },
+    "timestamp": "2025-08-06T01:44:13.949Z",
+    "modelVersion": 3
+  },
+  {
+    "symbol": "SOL",
+    "exchange": "OKX",
+    "predictedDirection": "bullish",
+    "actualDirection": "bullish",
+    "userRating": 4,
+    "features": {
+      "technicalStrength": 0.584317035382852,
+      "volumeStrength": 0.5781275731524824,
+      "sentimentStrength": 0.5434011421645826,
+      "historicalStrength": 0.48841077729877275
+    },
+    "timestamp": "2025-08-06T01:44:13.951Z",
+    "modelVersion": 4
+  },
+  {
+    "symbol": "XRP",
+    "exchange": "Bitget",
+    "predictedDirection": "bearish",
+    "actualDirection": "bullish",
+    "userRating": 1,
+    "features": {
+      "technicalStrength": 0.5478807604808821,
+      "volumeStrength": 0.5292681666217874,
+      "sentimentStrength": 0.42340401396071364,
+      "historicalStrength": 0.6143482405226844
+    },
+    "timestamp": "2025-08-06T01:44:13.953Z",
+    "modelVersion": 5
+  },
+  {
+    "symbol": "BTC",
+    "exchange": "Binance",
+    "predictedDirection": "bullish",
+    "actualDirection": "bullish",
+    "userRating": 3,
+    "features": {
+      "technicalStrength": 0.5,
+      "volumeStrength": 0.5,
+      "sentimentStrength": 0.5,
+      "historicalStrength": 0.5
+    },
+    "timestamp": "2025-08-06T01:44:13.965Z",
+    "modelVersion": 6
+  },
+  {
+    "symbol": "BTC",
+    "exchange": "Binance",
+    "predictedDirection": "bullish",
+    "actualDirection": "bullish",
+    "userRating": 3,
+    "features": {
+      "technicalStrength": 0.5,
+      "volumeStrength": 0.5,
+      "sentimentStrength": 0.5,
+      "historicalStrength": 0.5
+    },
+    "timestamp": "2025-08-06T01:44:13.965Z",
+    "modelVersion": 7
+  },
+  {
+    "symbol": "BTC",
+    "exchange": "Binance",
+    "predictedDirection": "bullish",
+    "actualDirection": "bullish",
+    "userRating": 3,
+    "features": {
+      "technicalStrength": 0.5,
+      "volumeStrength": 0.5,
+      "sentimentStrength": 0.5,
+      "historicalStrength": 0.5
+    },
+    "timestamp": "2025-08-06T01:44:13.966Z",
+    "modelVersion": 8
+  }
+]
