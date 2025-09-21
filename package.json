@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "install:tf": "npm install @tensorflow/tfjs-node@4.15.0 --force",
-    "install:tfjs": "npm install @tensorflow/tfjs@4.15.0"
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -31,9 +29,6 @@
     "eslint": "^8.55.0",
     "eslint-config-next": "^14.0.3"
   },
-  "optionalDependencies": {
-    "@tensorflow/tfjs-node": "^4.15.0"
-  },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
@@ -42,12 +37,10 @@
     "cryptocurrency",
     "arbitrage",
     "funding-rate",
-    "ai",
-    "machine-learning",
     "nextjs",
     "react"
   ],
   "author": "ArbiMaster Team",
   "license": "MIT",
-  "description": "AI-powered cryptocurrency arbitrage monitoring platform with funding rate prediction and market sentiment analysis"
+  "description": "Professional cryptocurrency arbitrage monitoring platform with real-time market data and funding rate analysis"
 }

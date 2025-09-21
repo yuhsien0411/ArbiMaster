@@ -124,14 +124,6 @@ export default function Home() {
                 description: '追蹤主流交易所的資金費率變化趨勢，掌握市場動向'
               },
               {
-                href: '/fund-flow',
-                icon: '💹',
-                iconClass: styles.flow,
-                stats: { label: '數據來源', value: '3+交易所' },
-                title: '資金流向',
-                description: '分析交易所資金流入流出趨勢，預測市場走向'
-              },
-              {
                 href: '/volume',
                 icon: '📈',
                 iconClass: styles.volume,
@@ -171,22 +163,6 @@ export default function Home() {
                 title: '槓桿現貨',
                 description: '追蹤槓桿現貨交易數據，把握市場趨勢和投資機會'
               },
-              {
-                href: '/predictions',
-                icon: '🤖',
-                iconClass: styles.predictions,
-                stats: { label: 'AI模型', value: '機器學習' },
-                title: 'AI 預測分析',
-                description: '基於機器學習的資金費率預測、套利機會分析和市場情緒預測'
-              },
-              {
-                href: '/realistic-predictions',
-                icon: '📈',
-                iconClass: styles.realisticPredictions,
-                stats: { label: '數據來源', value: '真實數據' },
-                title: 'AI 實用預測',
-                description: '基於真實數據的多因子分析，提供具體交易建議和歷史表現追蹤'
-              }
             ].map((feature, index) => (
               <Link href={feature.href} key={index} className={styles.featureCard}>
                 <div className={styles.featureCardInner}>
