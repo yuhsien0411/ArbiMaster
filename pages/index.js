@@ -163,6 +163,14 @@ export default function Home() {
                 title: '槓桿現貨',
                 description: '追蹤槓桿現貨交易數據，把握市場趨勢和投資機會'
               },
+              {
+                href: 'http://178.128.80.16:3000/',
+                icon: '⚡',
+                iconClass: styles.arbitrade,
+                stats: { label: '平台類型', value: '交易平台' },
+                title: 'Arbitrade',
+                description: '專業的加密貨幣交易平台，提供多種交易工具和服務'
+              },
             ].map((feature, index) => (
               <Link href={feature.href} key={index} className={styles.featureCard}>
                 <div className={styles.featureCardInner}>
